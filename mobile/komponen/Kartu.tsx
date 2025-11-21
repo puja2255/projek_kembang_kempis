@@ -1,7 +1,7 @@
 // mobile/komponen/Kartu.js
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 
 type Transaction = {
   jenis: string;
