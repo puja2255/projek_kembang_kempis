@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, Picker } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 // *** GANTI DENGAN IP LOKAL KOMPUTER ANDA ***
 const API_URL = 'http://192.168.1.10:3000'; 
 
-const Inputan = ({ navigation }) => {
+const Inputan: React.FC<any> = ({ navigation }) => {
   const [jumlah, setJumlah] = useState('');
   const [jenis, setJenis] = useState('Pemasukan');
   const [deskripsi, setDeskripsi] = useState('');
@@ -66,7 +67,7 @@ const Inputan = ({ navigation }) => {
     setShowDatePicker(true);
   };
 
-  const onDateChange = (event, selectedDate) => {
+  const onDateChange = (event: any, selectedDate?: Date | undefined) => {
     const currentDate = selectedDate || date;
     setShowDatePicker(false);
     setDate(currentDate);
@@ -78,7 +79,7 @@ const Inputan = ({ navigation }) => {
       <Picker
         selectedValue={jenis}
         style={styles.input}
-        onValueChange={(itemValue) => setJenis(itemValue)}
+        onValueChange={(itemValue: string) => setJenis(itemValue)}
       >
         <Picker.Item label="Pemasukan" value="Pemasukan" />
         <Picker.Item label="Pengeluaran" value="Pengeluaran" />
