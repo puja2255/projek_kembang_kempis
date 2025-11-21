@@ -26,6 +26,7 @@ const Kartu: React.FC<{ transaksi: Transaction }> = ({ transaksi }) => {
     <View style={styles.kartu}>
       <View style={styles.detail}>
         <Text style={styles.deskripsi}>{transaksi.deskripsi || '-'}</Text>
+        {transaksi.deskripsiTambahan && expanded && (
         <Text style={styles.tanggal}>{tanggal}</Text>
       </View>
       <Text style={[styles.jumlah, { color: warna }]}>
