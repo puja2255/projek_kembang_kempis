@@ -40,6 +40,32 @@ const Home: React.FC = () => {
     }, [])
   );
 
+  // MOCK DATA (temporary) - agar Kartu selalu muncul saat pengujian.
+  // Hapus atau nonaktifkan blok ini setelah backend diverifikasi.
+  React.useEffect(() => {
+    const now = new Date().toISOString();
+    const mock: Transaksi[] = [
+      {
+        id: 'mock-1',
+        jenis: 'Pemasukan',
+        jumlah: 150000,
+        tanggal: now,
+        deskripsi: 'Mock: Gaji bulanan',
+        createdAt: now,
+      },
+      {
+        id: 'mock-2',
+        jenis: 'Pengeluaran',
+        jumlah: 45000,
+        tanggal: now,
+        deskripsi: 'Mock: Makan siang',
+        createdAt: now,
+      },
+    ];
+    setData(mock);
+    setLoading(false);
+  }, []);
+
   // Hitung total saldo
   const saldo: number = data.reduce((acc, trans) => {
     return trans.jenis === 'Pemasukan' ? acc + trans.jumlah : acc - trans.jumlah;
