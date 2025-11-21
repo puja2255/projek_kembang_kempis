@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { emit } from '../komponen/eventBus';
 
 // *** GANTI DENGAN IP LOKAL KOMPUTER ANDA ***
 const API_URL = 'http://192.168.1.10:3000'; 
@@ -37,6 +38,9 @@ const Inputan: React.FC<any> = ({ navigation }) => {
       });
 
       if (response.ok) {
+        const baru = await response.json();
+        // emit event supaya daftar transaksi langsung terupdate
+        try { emit('transaksi:created', baru); } catch (e) { /* ignore */ }
         Alert.alert('Sukses', 'Transaksi berhasil disimpan!');
         setFeedbackMessage('Transaksi berhasil disimpan!');
         // Reset form
