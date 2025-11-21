@@ -8,8 +8,14 @@ import { BarChart } from 'react-native-chart-kit';
 const API_URL = 'http://192.168.1.10:3000'; 
 const screenWidth = Dimensions.get('window').width;
 
-const Laporan = () => {
-  const [dataLaporan, setDataLaporan] = useState([]);
+type LaporanItem = {
+  bulan: string;
+  pemasukan: string;
+  pengeluaran: string;
+};
+
+const Laporan: React.FC = () => {
+  const [dataLaporan, setDataLaporan] = useState<LaporanItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const ambilLaporan = async () => {
@@ -44,7 +50,7 @@ const Laporan = () => {
 
   const labels = dataTerakhir.map(item => new Date(item.bulan).toLocaleString('id-ID', { month: 'short', year: '2-digit' }));
   const pemasukan = dataTerakhir.map(item => parseFloat(item.pemasukan) / 1000); // Bagi 1000 agar nilai di Y Axis tidak terlalu besar
-  const pengeluaran = dataTerakhir.map(item => parseFloat(item.pengeluaran) / 1000); 
+  const pengeluaran = dataTerakhir.map(item => parseFloat(item.pengeluaran) / 1000);
 
   const chartData = {
     labels: labels,
