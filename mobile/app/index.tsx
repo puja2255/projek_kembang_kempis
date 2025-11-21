@@ -61,11 +61,11 @@ const Home: React.FC = () => {
       <View style={styles.tombolContainer}>
         <Button 
           title="Tambah Transaksi" 
-          onPress={() => router.push('inputan')}
+          onPress={() => router.push('/inputan')}
         />
         <Button 
           title="Lihat Laporan" 
-          onPress={() => router.push('laporan')}
+          onPress={() => router.push('/laporan')}
         />
       </View>
 
