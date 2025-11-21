@@ -1,11 +1,12 @@
 // mobile/app/index.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, ActivityIndicator, RefreshControl, Alert, TouchableOpacity } from 'react-native';
 import Kartu from '../komponen/Kartu'; 
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Transaksi, formatRupiah } from '../komponen/tipe'; // Import Tipe dan fungsi pembantu
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { on as busOn } from '../komponen/eventBus';
 
 // *** GANTI DENGAN IP LOKAL KOMPUTER ANDA ***
 const API_URL: string = 'http://192.168.1.10:3000'; 
@@ -43,6 +44,16 @@ const Home: React.FC = () => {
       return () => {}; 
     }, [])
   );
+
+  // Subscribe ke event bus supaya ketika ada transaksi baru dari layar Inputan,
+  // kita bisa langsung append ke state agar tampil realtime.
+  useEffect(() => {
+    const unsub = busOn('transaksi:created', (item: Transaksi) => {
+      if (!item) return;
+      setData((prev) => [item, ...prev]);
+    });
+    return () => unsub();
+  }, []);
 
   // MOCK_DATA: gunakan hanya jika API mengembalikan array kosong atau fetch gagal
   const MOCK_DATA: Transaksi[] = [
