@@ -3,13 +3,22 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-const Kartu = ({ transaksi }) => {
+type Transaction = {
+  jenis: string;
+  tanggal: string;
+  jumlah: number;
+  deskripsi?: string | null;
+};
+
+const Kartu: React.FC<{ transaksi: Transaction }> = ({ transaksi }) => {
   const isPemasukan = transaksi.jenis === 'Pemasukan';
   const warna = isPemasukan ? 'green' : 'red';
-  
+
   const tanggal = new Date(transaksi.tanggal).toLocaleDateString('id-ID');
   // Format jumlah dengan pemisah ribuan
-  const jumlah = transaksi.jumlah.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  const jumlah = transaksi.jumlah
+    .toFixed(0)
+    .replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 
   return (
     <View style={styles.kartu}>
