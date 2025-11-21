@@ -12,6 +12,7 @@ type Transaction = {
 };
 
 const Kartu: React.FC<{ transaksi: Transaction }> = ({ transaksi }) => {
+  const [expanded, setExpanded] = useState(false);
   const isPemasukan = transaksi.jenis === 'Pemasukan';
   const warna = isPemasukan ? 'green' : 'red';
 
