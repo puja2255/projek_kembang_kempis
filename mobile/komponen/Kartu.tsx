@@ -8,7 +8,7 @@ type Transaction = {
   tanggal: string;
   jumlah: number;
   deskripsi?: string | null;
-  deskripsiTambahan?:
+  deskripsiTambahan?: string | null;
 };
 
 const Kartu: React.FC<{ transaksi: Transaction }> = ({ transaksi }) => {
