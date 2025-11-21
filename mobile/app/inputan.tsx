@@ -1,7 +1,6 @@
-// mobile/layar/Inputan.js
-
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, Picker } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 // *** GANTI DENGAN IP LOKAL KOMPUTER ANDA ***
 const API_URL = 'http://192.168.1.10:3000'; 
@@ -11,6 +10,9 @@ const Inputan = ({ navigation }) => {
   const [jenis, setJenis] = useState('Pemasukan');
   const [deskripsi, setDeskripsi] = useState('');
   const [loading, setLoading] = useState(false);
+  const [date, setDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
 
   const simpan = async () => {
     if (!jumlah || parseFloat(jumlah) <= 0) {
@@ -29,14 +31,17 @@ const Inputan = ({ navigation }) => {
           jumlah: jumlah,
           jenis: jenis,
           deskripsi: deskripsi,
+          tanggal: date.toISOString(),
         }),
       });
 
       if (response.ok) {
         Alert.alert('Sukses', 'Transaksi berhasil disimpan!');
+        setFeedbackMessage('Transaksi berhasil disimpan!');
         // Reset form
         setJumlah('');
         setDeskripsi('');
+        setDate(new Date());
         navigation.goBack(); 
       } else {
         const errorData = await response.json();
@@ -48,6 +53,23 @@ const Inputan = ({ navigation }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const resetForm = () => {
+    setJumlah('');
+    setDeskripsi('');
+    setDate(new Date());
+    setFeedbackMessage('');
+  };
+
+  const showDatepicker = () => {
+    setShowDatePicker(true);
+  };
+
+  const onDateChange = (event, selectedDate) => {
+    const currentDate = selectedDate || date;
+    setShowDatePicker(false);
+    setDate(currentDate);
   };
 
   return (
@@ -70,6 +92,7 @@ const Inputan = ({ navigation }) => {
         onChangeText={setJumlah}
         placeholder="Contoh: 50000"
       />
+      {!jumlah ? <Text style={styles.errorText}>Jumlah harus diisi dan lebih dari 0.</Text> : null}
 
       <Text style={styles.label}>Deskripsi</Text>
       <TextInput
@@ -80,7 +103,22 @@ const Inputan = ({ navigation }) => {
         placeholder="Contoh: Gaji bulanan, Beli kopi"
       />
 
+      <Text style={styles.label}>Tanggal Transaksi</Text>
+      <Button title={`Pilih Tanggal: ${date.toLocaleDateString()}`} onPress={showDatepicker} />
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={date}
+          mode="date"
+          display="default"
+          onChange={onDateChange}
+        />
+      )}
+
       <Button title={loading ? "Menyimpan..." : "Simpan Transaksi"} onPress={simpan} disabled={loading} />
+      <Button title="Reset Form" onPress={resetForm} color="#f00" />
+
+      {feedbackMessage ? <Text style={styles.feedbackText}>{feedbackMessage}</Text> : null}
     </View>
   );
 };
@@ -104,6 +142,14 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     borderRadius: 5,
     backgroundColor: '#fff',
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 10,
+  },
+  feedbackText: {
+    color: 'green',
+    marginTop: 10,
   },
 });
 
