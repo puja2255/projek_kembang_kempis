@@ -33,6 +33,7 @@ const Kartu: React.FC<{ transaksi: Transaction }> = ({ transaksi }) => {
       <Text style={[styles.jumlah, { color: warna }]}>
         {isPemasukan ? '+' : '-'} Rp {jumlah}
       </Text>
+      <TouchableOpacity onPress={() => setExpanded(!expanded)}></TouchableOpacity>
     </View>
   );
 };
