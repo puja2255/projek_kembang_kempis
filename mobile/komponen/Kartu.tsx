@@ -1,6 +1,6 @@
 // mobile/komponen/Kartu.js
 
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 
 type Transaction = {
