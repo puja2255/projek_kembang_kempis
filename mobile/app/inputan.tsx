@@ -5,7 +5,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { emit } from '../komponen/eventBus';
 
 // *** GANTI DENGAN IP LOKAL KOMPUTER ANDA ***
-const API_URL = 'http://192.168.1.10:3000'; 
+const API_URL = 'http://192.168.56.1:3000'; 
 
 const Inputan: React.FC<any> = ({ navigation }) => {
   const [jumlah, setJumlah] = useState('');
