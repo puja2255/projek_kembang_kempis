@@ -7,8 +7,9 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Button,
 } from "react-native";
-import { BarChart } from "react-native-chart-kit";
+import { BarChart, LineChart } from "react-native-chart-kit";
 
 const API_URL = "http://192.168.56.1:3000";
 const screenWidth = Dimensions.get("window").width;
@@ -22,6 +23,7 @@ type LaporanItem = {
 const Laporan: React.FC = () => {
   const [dataLaporan, setDataLaporan] = useState<LaporanItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chartType, setChartType] = useState<"bar" | "line">("bar"); // ✅ pilih chart
 
   const ambilLaporan = async () => {
     setLoading(true);
@@ -68,6 +70,16 @@ const Laporan: React.FC = () => {
     parseFloat(item.pengeluaran) / 1000
   );
 
+  const chartDataPemasukan = {
+    labels,
+    datasets: [{ data: pemasukan }],
+  };
+
+  const chartDataPengeluaran = {
+    labels,
+    datasets: [{ data: pengeluaran }],
+  };
+
   const chartConfigPemasukan = {
     backgroundColor: "#ffffff",
     backgroundGradientFrom: "#ffffff",
@@ -86,37 +98,73 @@ const Laporan: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.judul}>Grafik Pemasukan (Ribu Rupiah)</Text>
-      <BarChart
-        data={{
-          labels: labels,
-          datasets: [{ data: pemasukan }],
-        }}
-        width={screenWidth - 20}
-        height={250}
-        yAxisLabel="Rp"
-        yAxisSuffix="k"
-        chartConfig={chartConfigPemasukan}
-        verticalLabelRotation={30}
-        fromZero={true}
-        style={styles.grafik}
-      />
+      <Text style={styles.judul}>Grafik Bulanan (Ribu Rupiah)</Text>
 
-      <Text style={styles.judul}>Grafik Pengeluaran (Ribu Rupiah)</Text>
-      <BarChart
-        data={{
-          labels: labels,
-          datasets: [{ data: pengeluaran }],
-        }}
-        width={screenWidth - 20}
-        height={250}
-        yAxisLabel="Rp"
-        yAxisSuffix="k"
-        chartConfig={chartConfigPengeluaran}
-        verticalLabelRotation={30}
-        fromZero={true}
-        style={styles.grafik}
-      />
+      {/* Tombol untuk ganti chart */}
+      <View style={styles.switchContainer}>
+        <Button
+          title="Diagram Batang"
+          onPress={() => setChartType("bar")}
+          color={chartType === "bar" ? "blue" : "gray"}
+        />
+        <Button
+          title="Diagram Garis"
+          onPress={() => setChartType("line")}
+          color={chartType === "line" ? "blue" : "gray"}
+        />
+      </View>
+
+      <Text style={styles.subJudul}>Pemasukan</Text>
+      {chartType === "bar" ? (
+        <BarChart
+          data={chartDataPemasukan}
+          width={screenWidth - 20}
+          height={250}
+          yAxisLabel="Rp"
+          yAxisSuffix="k"
+          chartConfig={chartConfigPemasukan}
+          verticalLabelRotation={30}
+          fromZero={true}
+          style={styles.grafik}
+        />
+      ) : (
+        <LineChart
+          data={chartDataPemasukan}
+          width={screenWidth - 20}
+          height={250}
+          yAxisLabel="Rp"
+          yAxisSuffix="k"
+          chartConfig={chartConfigPemasukan}
+          bezier
+          style={styles.grafik}
+        />
+      )}
+
+      <Text style={styles.subJudul}>Pengeluaran</Text>
+      {chartType === "bar" ? (
+        <BarChart
+          data={chartDataPengeluaran}
+          width={screenWidth - 20}
+          height={250}
+          yAxisLabel="Rp"
+          yAxisSuffix="k"
+          chartConfig={chartConfigPengeluaran}
+          verticalLabelRotation={30}
+          fromZero={true}
+          style={styles.grafik}
+        />
+      ) : (
+        <LineChart
+          data={chartDataPengeluaran}
+          width={screenWidth - 20}
+          height={250}
+          yAxisLabel="Rp"
+          yAxisSuffix="k"
+          chartConfig={chartConfigPengeluaran}
+          bezier
+          style={styles.grafik}
+        />
+      )}
     </ScrollView>
   );
 };
@@ -133,14 +181,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   judul: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
     marginBottom: 15,
+    textAlign: "center",
+  },
+  subJudul: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginVertical: 10,
     textAlign: "center",
   },
   grafik: {
     marginVertical: 8,
     borderRadius: 16,
+  },
+  switchContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 20,
   },
 });
 
