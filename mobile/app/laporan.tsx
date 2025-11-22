@@ -23,7 +23,7 @@ type LaporanItem = {
 const Laporan: React.FC = () => {
   const [dataLaporan, setDataLaporan] = useState<LaporanItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [chartType, setChartType] = useState<"bar" | "line" | "pie">("bar"); // ✅ tambah pie
+  const [chartType, setChartType] = useState<"bar" | "line" | "pie">("bar");
 
   const ambilLaporan = async () => {
     setLoading(true);
@@ -85,7 +85,7 @@ const Laporan: React.FC = () => {
     backgroundGradientFrom: "#ffffff",
     backgroundGradientTo: "#f0f0f0",
     decimalPlaces: 0,
-    color: (opacity = 1) => `rgba(0, 128, 0, ${opacity})`, // Hijau
+    color: (opacity = 1) => `rgba(0, 128, 0, ${opacity})`,
     labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
     style: { borderRadius: 16 },
     propsForLabels: { fontSize: 10 },
@@ -93,23 +93,24 @@ const Laporan: React.FC = () => {
 
   const chartConfigPengeluaran = {
     ...chartConfigPemasukan,
-    color: (opacity = 1) => `rgba(255, 0, 0, ${opacity})`, // Merah
+    color: (opacity = 1) => `rgba(255, 0, 0, ${opacity})`,
   };
 
-  // ✅ Data untuk PieChart (total pemasukan vs pengeluaran)
+  // ✅ Hitung total dan persentase
   const totalPemasukan = pemasukan.reduce((a, b) => a + b, 0);
   const totalPengeluaran = pengeluaran.reduce((a, b) => a + b, 0);
+  const total = totalPemasukan + totalPengeluaran;
 
   const pieData = [
     {
-      name: "Pemasukan",
+      name: `Pemasukan (${((totalPemasukan / total) * 100).toFixed(1)}%)`,
       population: totalPemasukan,
       color: "green",
       legendFontColor: "#000",
       legendFontSize: 12,
     },
     {
-      name: "Pengeluaran",
+      name: `Pengeluaran (${((totalPengeluaran / total) * 100).toFixed(1)}%)`,
       population: totalPengeluaran,
       color: "red",
       legendFontColor: "#000",
@@ -121,7 +122,6 @@ const Laporan: React.FC = () => {
     <ScrollView style={styles.container}>
       <Text style={styles.judul}>Grafik Bulanan (Ribu Rupiah)</Text>
 
-      {/* Tombol untuk ganti chart */}
       <View style={styles.switchContainer}>
         <Button
           title="Diagram Batang"
