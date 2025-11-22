@@ -9,7 +9,7 @@ import {
   Alert,
   Button,
 } from "react-native";
-import { BarChart, LineChart } from "react-native-chart-kit";
+import { BarChart, LineChart, PieChart } from "react-native-chart-kit";
 
 const API_URL = "http://192.168.56.1:3000";
 const screenWidth = Dimensions.get("window").width;
@@ -23,7 +23,7 @@ type LaporanItem = {
 const Laporan: React.FC = () => {
   const [dataLaporan, setDataLaporan] = useState<LaporanItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [chartType, setChartType] = useState<"bar" | "line">("bar"); // ✅ pilih chart
+  const [chartType, setChartType] = useState<"bar" | "line" | "pie">("bar"); // ✅ tambah pie
 
   const ambilLaporan = async () => {
     setLoading(true);
@@ -96,6 +96,27 @@ const Laporan: React.FC = () => {
     color: (opacity = 1) => `rgba(255, 0, 0, ${opacity})`, // Merah
   };
 
+  // ✅ Data untuk PieChart (total pemasukan vs pengeluaran)
+  const totalPemasukan = pemasukan.reduce((a, b) => a + b, 0);
+  const totalPengeluaran = pengeluaran.reduce((a, b) => a + b, 0);
+
+  const pieData = [
+    {
+      name: "Pemasukan",
+      population: totalPemasukan,
+      color: "green",
+      legendFontColor: "#000",
+      legendFontSize: 12,
+    },
+    {
+      name: "Pengeluaran",
+      population: totalPengeluaran,
+      color: "red",
+      legendFontColor: "#000",
+      legendFontSize: 12,
+    },
+  ];
+
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.judul}>Grafik Bulanan (Ribu Rupiah)</Text>
@@ -112,58 +133,78 @@ const Laporan: React.FC = () => {
           onPress={() => setChartType("line")}
           color={chartType === "line" ? "blue" : "gray"}
         />
+        <Button
+          title="Diagram Lingkaran"
+          onPress={() => setChartType("pie")}
+          color={chartType === "pie" ? "blue" : "gray"}
+        />
       </View>
 
-      <Text style={styles.subJudul}>Pemasukan</Text>
-      {chartType === "bar" ? (
-        <BarChart
-          data={chartDataPemasukan}
+      {chartType === "pie" ? (
+        <PieChart
+          data={pieData}
           width={screenWidth - 20}
           height={250}
-          yAxisLabel="Rp"
-          yAxisSuffix="k"
           chartConfig={chartConfigPemasukan}
-          verticalLabelRotation={30}
-          fromZero={true}
-          style={styles.grafik}
+          accessor={"population"}
+          backgroundColor={"transparent"}
+          paddingLeft={"15"}
+          absolute
         />
       ) : (
-        <LineChart
-          data={chartDataPemasukan}
-          width={screenWidth - 20}
-          height={250}
-          yAxisLabel="Rp"
-          yAxisSuffix="k"
-          chartConfig={chartConfigPemasukan}
-          bezier
-          style={styles.grafik}
-        />
-      )}
+        <>
+          <Text style={styles.subJudul}>Pemasukan</Text>
+          {chartType === "bar" ? (
+            <BarChart
+              data={chartDataPemasukan}
+              width={screenWidth - 20}
+              height={250}
+              yAxisLabel="Rp"
+              yAxisSuffix="k"
+              chartConfig={chartConfigPemasukan}
+              verticalLabelRotation={30}
+              fromZero={true}
+              style={styles.grafik}
+            />
+          ) : (
+            <LineChart
+              data={chartDataPemasukan}
+              width={screenWidth - 20}
+              height={250}
+              yAxisLabel="Rp"
+              yAxisSuffix="k"
+              chartConfig={chartConfigPemasukan}
+              bezier
+              style={styles.grafik}
+            />
+          )}
 
-      <Text style={styles.subJudul}>Pengeluaran</Text>
-      {chartType === "bar" ? (
-        <BarChart
-          data={chartDataPengeluaran}
-          width={screenWidth - 20}
-          height={250}
-          yAxisLabel="Rp"
-          yAxisSuffix="k"
-          chartConfig={chartConfigPengeluaran}
-          verticalLabelRotation={30}
-          fromZero={true}
-          style={styles.grafik}
-        />
-      ) : (
-        <LineChart
-          data={chartDataPengeluaran}
-          width={screenWidth - 20}
-          height={250}
-          yAxisLabel="Rp"
-          yAxisSuffix="k"
-          chartConfig={chartConfigPengeluaran}
-          bezier
-          style={styles.grafik}
-        />
+          <Text style={styles.subJudul}>Pengeluaran</Text>
+          {chartType === "bar" ? (
+            <BarChart
+              data={chartDataPengeluaran}
+              width={screenWidth - 20}
+              height={250}
+              yAxisLabel="Rp"
+              yAxisSuffix="k"
+              chartConfig={chartConfigPengeluaran}
+              verticalLabelRotation={30}
+              fromZero={true}
+              style={styles.grafik}
+            />
+          ) : (
+            <LineChart
+              data={chartDataPengeluaran}
+              width={screenWidth - 20}
+              height={250}
+              yAxisLabel="Rp"
+              yAxisSuffix="k"
+              chartConfig={chartConfigPengeluaran}
+              bezier
+              style={styles.grafik}
+            />
+          )}
+        </>
       )}
     </ScrollView>
   );
