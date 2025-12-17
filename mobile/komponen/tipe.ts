@@ -5,6 +5,7 @@ export interface Transaksi {
   id: string;
   tanggal: string; // Tipe string karena datang dari API (ISO format)
   jenis: 'Pemasukan' | 'Pengeluaran';
+  kategori: string;
   jumlah: number;
   deskripsi: string | null;
   createdAt: string;
