@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useRouter, Link } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Kartu from '../komponen/Kartu';
@@ -213,6 +213,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 12,
+  },
+  linkProfil: {
+    marginTop: 8,
+    marginBottom: 4,
+    fontWeight: '600',
   },
   balanceCard: {
     padding: 16,

@@ -1,38 +1,55 @@
 import React from 'react';
-import { Stack } from 'expo-router';
-import { View } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
+import { View, Image, Pressable } from 'react-native';
 import { ThemeProvider, useTheme } from '../komponen/ThemeContext';
 
-/* Wrapper untuk Stack agar bisa pakai theme */
+/* Wrapper agar Stack bisa akses Theme */
 function LayoutWrapper() {
   const { theme } = useTheme();
+  const router = useRouter();
+  const isDark = theme === 'dark';
 
   return (
     <View
       style={{
         flex: 1,
-        backgroundColor: theme === 'dark' ? '#121212' : '#F5F5F5',
+        backgroundColor: isDark ? '#121212' : '#F5F5F5',
       }}
     >
       <Stack
         screenOptions={{
           headerStyle: {
-            backgroundColor: theme === 'dark' ? '#1E1E1E' : '#FFFFFF',
+            backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
           },
-          headerTintColor: theme === 'dark' ? '#FFFFFF' : '#000000',
+          headerTintColor: isDark ? '#FFFFFF' : '#000000',
+
+          /* Avatar Profil di Header */
+          headerRight: () => (
+            <Pressable
+              onPress={() => router.push('/profil')}
+              style={{ marginRight: 12 }}
+            >
+              <Image
+                source={{ uri: 'https://i.pravatar.cc/150' }}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                }}
+              />
+            </Pressable>
+          ),
         }}
       >
-
-        {/* index.tsx (Layar Home) */}
+        {/* Home */}
         <Stack.Screen
           name="index"
           options={{
             title: 'Kembang Kempis',
-            headerShown: true,
           }}
         />
 
-        {/* inputan.tsx (Layar Tambah Transaksi) */}
+        {/* Tambah Transaksi */}
         <Stack.Screen
           name="inputan"
           options={{
@@ -41,7 +58,7 @@ function LayoutWrapper() {
           }}
         />
 
-        {/* laporan.tsx (Layar Laporan Grafis) */}
+        {/* Laporan */}
         <Stack.Screen
           name="laporan"
           options={{
@@ -49,6 +66,21 @@ function LayoutWrapper() {
           }}
         />
 
+        {/* Profil */}
+        <Stack.Screen
+          name="profil"
+          options={{
+            title: 'Profil',
+          }}
+        />
+
+        {/* Edit Profil */}
+        <Stack.Screen
+          name="edit-profil"
+          options={{
+            title: 'Edit Profil',
+          }}
+        />
       </Stack>
     </View>
   );
