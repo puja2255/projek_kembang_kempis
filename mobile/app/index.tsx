@@ -1,19 +1,33 @@
-// mobile/app/index.tsx
-
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, RefreshControl, Alert, TouchableOpacity } from 'react-native';
-import Kartu from '../komponen/Kartu'; 
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  ActivityIndicator,
+  RefreshControl,
+  Alert,
+  TouchableOpacity,
+} from 'react-native';
+
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Transaksi, formatRupiah } from '../komponen/tipe'; // Import Tipe dan fungsi pembantu
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+import Kartu from '../komponen/Kartu';
+import DarkModeToggle from '../komponen/DarkModeToggle';
+import { useTheme } from '../komponen/ThemeContext';
+
+import { Transaksi, formatRupiah } from '../komponen/tipe';
 import { on as busOn } from '../komponen/eventBus';
 
 // *** GANTI DENGAN IP LOKAL KOMPUTER ANDA ***
-const API_URL: string = 'http://192.168.56.1:3000'; 
+const API_URL: string = 'http://192.168.56.1:3000';
 
 const Home: React.FC = () => {
-  const router = useRouter(); 
-  const [data, setData] = useState<Transaksi[]>([]); 
+  const router = useRouter();
+  const { theme } = useTheme(); // 🌙 DARK MODE
+
+  const [data, setData] = useState<Transaksi[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
 
@@ -24,13 +38,14 @@ const Home: React.FC = () => {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const json: Transaksi[] = await response.json(); 
-      // Jika API mengembalikan kosong, gunakan mock lokal agar tampilan tetap terlihat
+      const json: Transaksi[] = await response.json();
       setData(Array.isArray(json) && json.length > 0 ? json : MOCK_DATA);
     } catch (error) {
-      console.error("Gagal mengambil data:", error);
-      Alert.alert('Koneksi Gagal', 'Pastikan server backend berjalan dan IP Address sudah benar.');
-      // Jika fetch gagal, gunakan mock data agar UI dapat diuji tanpa backend
+      console.error('Gagal mengambil data:', error);
+      Alert.alert(
+        'Koneksi Gagal',
+        'Pastikan server backend berjalan dan IP Address sudah benar.'
+      );
       setData(MOCK_DATA);
     } finally {
       setLoading(false);
@@ -41,12 +56,10 @@ const Home: React.FC = () => {
   useFocusEffect(
     React.useCallback(() => {
       ambilData();
-      return () => {}; 
+      return () => {};
     }, [])
   );
 
-  // Subscribe ke event bus supaya ketika ada transaksi baru dari layar Inputan,
-  // kita bisa langsung append ke state agar tampil realtime.
   useEffect(() => {
     const unsub = busOn('transaksi:created', (item: Transaksi) => {
       if (!item) return;
@@ -55,7 +68,6 @@ const Home: React.FC = () => {
     return () => unsub();
   }, []);
 
-  // MOCK_DATA: gunakan hanya jika API mengembalikan array kosong atau fetch gagal
   const MOCK_DATA: Transaksi[] = [
     {
       id: 'mock-1',
@@ -75,9 +87,10 @@ const Home: React.FC = () => {
     },
   ];
 
-  // Hitung total saldo
   const saldo: number = data.reduce((acc, trans) => {
-    return trans.jenis === 'Pemasukan' ? acc + trans.jumlah : acc - trans.jumlah;
+    return trans.jenis === 'Pemasukan'
+      ? acc + trans.jumlah
+      : acc - trans.jumlah;
   }, 0);
 
   const onRefresh = () => {
@@ -85,46 +98,111 @@ const Home: React.FC = () => {
     ambilData();
   };
 
+  const isDark = theme === 'dark';
 
   return (
-    <View style={styles.container}>
-      <View style={styles.balanceCard}>
-        <Text style={styles.balanceLabel}>Saldo Saat Ini</Text>
-        <Text style={[styles.balanceValue, { color: saldo >= 0 ? '#27ae60' : '#e74c3c' }]}>Rp {formatRupiah(saldo)}</Text>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: isDark ? '#121212' : '#F5F7FB' },
+      ]}
+    >
+      {/* 🌙 Toggle Dark Mode */}
+      <DarkModeToggle />
+
+      <View
+        style={[
+          styles.balanceCard,
+          { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF' },
+        ]}
+      >
+        <Text
+          style={[
+            styles.balanceLabel,
+            { color: isDark ? '#AAAAAA' : '#777' },
+          ]}
+        >
+          Saldo Saat Ini
+        </Text>
+        <Text
+          style={[
+            styles.balanceValue,
+            { color: saldo >= 0 ? '#27ae60' : '#e74c3c' },
+          ]}
+        >
+          Rp {formatRupiah(saldo)}
+        </Text>
       </View>
 
       <View style={styles.tombolContainer}>
-        <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/inputan')}>
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={() => router.push('/inputan')}
+        >
           <Text style={styles.primaryButtonText}>Tambah Transaksi</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.secondaryButton} onPress={() => router.push('/laporan')}>
-          <Text style={styles.secondaryButtonText}>Lihat Laporan</Text>
+
+        <TouchableOpacity
+          style={[
+            styles.secondaryButton,
+            {
+              backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+              borderColor: isDark ? '#333' : '#e6e9ee',
+            },
+          ]}
+          onPress={() => router.push('/laporan')}
+        >
+          <Text
+            style={[
+              styles.secondaryButtonText,
+              { color: isDark ? '#FFFFFF' : '#333' },
+            ]}
+          >
+            Lihat Laporan
+          </Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.judulList}>Daftar Transaksi</Text>
-      
+      <Text
+        style={[
+          styles.judulList,
+          { color: isDark ? '#FFFFFF' : '#000000' },
+        ]}
+      >
+        Daftar Transaksi
+      </Text>
+
       {loading && !refreshing ? (
-        <ActivityIndicator size="large" color="#0000ff" style={{ marginTop: 20 }}/>
+        <ActivityIndicator size="large" color="#2d9cdb" />
       ) : (
-        <ScrollView 
+        <ScrollView
           style={styles.list}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
           {data.length > 0 ? (
-            data.map((item: Transaksi) => (
-              <Kartu key={item.id} transaksi={item} /> 
+            data.map((item) => (
+              <Kartu key={item.id} transaksi={item} />
             ))
           ) : (
-            <Text style={styles.emptyText}>Belum ada transaksi. Tarik ke bawah untuk refresh.</Text>
+            <Text
+              style={[
+                styles.emptyText,
+                { color: isDark ? '#AAAAAA' : '#666' },
+              ]}
+            >
+              Belum ada transaksi.
+            </Text>
           )}
         </ScrollView>
       )}
-      
-      {/* FAB: floating add button */}
-      <TouchableOpacity style={styles.fab} onPress={() => router.push('/inputan')}>
+
+      {/* FAB */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => router.push('/inputan')}
+      >
         <MaterialCommunityIcons name="plus" size={28} color="#fff" />
       </TouchableOpacity>
     </View>
@@ -132,22 +210,30 @@ const Home: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 12, backgroundColor: '#f5f7fb' },
+  container: {
+    flex: 1,
+    padding: 12,
+  },
   balanceCard: {
-    backgroundColor: '#fff',
     padding: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginVertical: 10,
     elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
   },
-  balanceLabel: { fontSize: 14, color: '#777' },
-  balanceValue: { fontSize: 26, fontWeight: '700', marginTop: 6 },
-  tombolContainer: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 12 },
+  balanceLabel: {
+    fontSize: 14,
+  },
+  balanceValue: {
+    fontSize: 26,
+    fontWeight: '700',
+    marginTop: 6,
+  },
+  tombolContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 12,
+  },
   primaryButton: {
     flex: 1,
     backgroundColor: '#2d9cdb',
@@ -156,22 +242,34 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
   },
-  primaryButtonText: { color: '#fff', fontWeight: '700' },
+  primaryButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
   secondaryButton: {
     flex: 1,
-    backgroundColor: '#fff',
     paddingVertical: 12,
     marginLeft: 8,
     borderRadius: 10,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e6e9ee',
   },
-  secondaryButtonText: { color: '#333', fontWeight: '700' },
-  judulList: { fontSize: 18, fontWeight: 'bold', marginTop: 10, marginBottom: 5 },
-  list: { flex: 1 },
-  emptyText: { textAlign: 'center', marginTop: 30, color: '#666' }
-  ,
+  secondaryButtonText: {
+    fontWeight: '700',
+  },
+  judulList: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  list: {
+    flex: 1,
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 30,
+  },
   fab: {
     position: 'absolute',
     right: 18,
@@ -183,11 +281,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-  }
+  },
 });
 
 export default Home;
