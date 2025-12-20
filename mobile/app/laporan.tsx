@@ -32,13 +32,11 @@ const Laporan: React.FC = () => {
   const [chartType, setChartType] = useState<"bar" | "line" | "pie">("bar");
   const [timeFilter, setTimeFilter] = useState<"Tahun" | "Bulan" | "Minggu">("Bulan");
 
-  // State untuk kontrol buka/tutup dropdown
   const [openPeriode, setOpenPeriode] = useState(false);
   const [openTipe, setOpenTipe] = useState(false);
 
-  // --- NEW STATE: Untuk memfilter tampilan grafik ---
-  const [showIn, setShowIn] = useState(true);
-  const [showOut, setShowOut] = useState(true);
+  // Filter tampilan: 'all' | 'in' | 'out'
+  const [viewFilter, setViewFilter] = useState<'all' | 'in' | 'out'>('all');
 
   const ambilLaporan = async () => {
     setLoading(true);
@@ -81,16 +79,14 @@ const Laporan: React.FC = () => {
       labels = Object.keys(grouped);
       masukan = labels.map(l => grouped[l].in);
       keluaran = labels.map(l => grouped[l].out);
-    } 
-    else if (timeFilter === "Minggu") {
+    } else if (timeFilter === "Minggu") {
       const dataTerakhir = dataLaporan[0];
       labels = ["Mgg 1", "Mgg 2", "Mgg 3", "Mgg 4"];
       const valIn = dataTerakhir ? parseFloat(dataTerakhir.pemasukan) : 0;
       const valOut = dataTerakhir ? parseFloat(dataTerakhir.pengeluaran) : 0;
       masukan = [valIn * 0.2, valIn * 0.3, valIn * 0.25, valIn * 0.25];
       keluaran = [valOut * 0.1, valOut * 0.4, valOut * 0.3, valOut * 0.2];
-    } 
-    else {
+    } else {
       const dataTerbatas = dataLaporan.slice(0, 6).reverse();
       labels = dataTerbatas.map(item => new Date(item.bulan).toLocaleString("id-ID", { month: "short" }));
       masukan = dataTerbatas.map(item => parseFloat(item.pemasukan));
@@ -114,19 +110,6 @@ const Laporan: React.FC = () => {
     color: (opacity = 1) => (isDark ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`),
     labelColor: (opacity = 1) => (isDark ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`),
     propsForLabels: { fontSize: 10 },
-  };
-
-  // Fungsi toggle filter
-  const toggleFilter = (type: 'in' | 'out') => {
-    if (chartType === "pie") return; // Tidak berlaku untuk pie chart sesuai request
-
-    if (type === 'in') {
-      if (!showIn && showOut) { setShowIn(true); setShowOut(true); } // Jika sedang fokus In, kembalikan keduanya
-      else { setShowIn(true); setShowOut(false); } // Fokus In
-    } else {
-      if (!showOut && showIn) { setShowIn(true); setShowOut(true); } // Jika sedang fokus Out, kembalikan keduanya
-      else { setShowOut(true); setShowIn(false); } // Fokus Out
-    }
   };
 
   if (loading) return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#4a90e2" /></View>;
@@ -161,7 +144,7 @@ const Laporan: React.FC = () => {
           {openTipe && (
             <View style={[styles.dropdownList, { backgroundColor: isDark ? "#2A2A2A" : "#FFF" }]}>
               {[{ id: "bar", label: "Batang" }, { id: "line", label: "Garis" }, { id: "pie", label: "Lingkaran" }].map((item) => (
-                <TouchableOpacity key={item.id} style={styles.dropdownItem} onPress={() => { setChartType(item.id as any); setOpenTipe(false); setShowIn(true); setShowOut(true); }}>
+                <TouchableOpacity key={item.id} style={styles.dropdownItem} onPress={() => { setChartType(item.id as any); setOpenTipe(false); setViewFilter('all'); }}>
                   <Text style={{ color: isDark ? "#FFF" : "#000" }}>{item.label}</Text>
                 </TouchableOpacity>
               ))}
@@ -170,26 +153,32 @@ const Laporan: React.FC = () => {
         </View>
       </View>
 
-      {/* --- RINGKASAN TOTAL (Sekaligus Tombol Filter) --- */}
+      {/* --- TOMBOL FILTER TRANSAKSI --- */}
       <View style={[styles.summaryCard, { backgroundColor: isDark ? "#1E1E1E" : "#F8F9FA" }]}>
+        {/* Tombol Masuk */}
         <TouchableOpacity 
-          style={[styles.summaryItem, !showIn && chartType !== "pie" && { opacity: 0.3 }]} 
-          onPress={() => toggleFilter('in')}
+          style={[styles.summaryItem, viewFilter === 'in' && styles.activeTab]} 
+          onPress={() => setViewFilter('in')}
         >
-          <Text style={styles.summaryLabel}>Total Masuk</Text>
-          <Text style={[styles.summaryValue, { color: "#00c853" }]}>{formatValueDinamis(totalIn)}</Text>
-          {(!showIn && chartType !== "pie") && <Text style={styles.miniHint}>Klik untuk tampilkan</Text>}
+          <Text style={styles.summaryLabel}>Masuk</Text>
+          <Text style={[styles.summaryValue, { color: "#00c853" }]}>{formatValueDinamis(totalIn).replace('Rp ', '')}</Text>
         </TouchableOpacity>
         
-        <View style={[styles.divider, { backgroundColor: isDark ? "#333" : "#DDD" }]} />
-        
+        {/* Tombol Tengah (Semua) */}
         <TouchableOpacity 
-          style={[styles.summaryItem, !showOut && chartType !== "pie" && { opacity: 0.3 }]} 
-          onPress={() => toggleFilter('out')}
+          style={[styles.centerBtn, { backgroundColor: viewFilter === 'all' ? "#4a90e2" : isDark ? "#333" : "#DDD" }]} 
+          onPress={() => setViewFilter('all')}
         >
-          <Text style={styles.summaryLabel}>Total Keluar</Text>
-          <Text style={[styles.summaryValue, { color: "#e53935" }]}>{formatValueDinamis(totalOut)}</Text>
-          {(!showOut && chartType !== "pie") && <Text style={styles.miniHint}>Klik untuk tampilkan</Text>}
+          <Text style={{ color: viewFilter === 'all' ? "#FFF" : isDark ? "#AAA" : "#666", fontSize: 10, fontWeight: 'bold' }}>SEMUA</Text>
+        </TouchableOpacity>
+        
+        {/* Tombol Keluar */}
+        <TouchableOpacity 
+          style={[styles.summaryItem, viewFilter === 'out' && styles.activeTab]} 
+          onPress={() => setViewFilter('out')}
+        >
+          <Text style={styles.summaryLabel}>Keluar</Text>
+          <Text style={[styles.summaryValue, { color: "#e53935" }]}>{formatValueDinamis(totalOut).replace('Rp ', '')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -198,16 +187,15 @@ const Laporan: React.FC = () => {
           <Text style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}>Proporsi {timeFilter}</Text>
           <PieChart
             data={[
-              { name: `In (${formatValueDinamis(totalIn).replace('Rp ', '')})`, population: totalIn, color: "#00c853", legendFontColor: isDark ? "#FFF" : "#000", legendFontSize: 11 },
-              { name: `Out (${formatValueDinamis(totalOut).replace('Rp ', '')})`, population: totalOut, color: "#e53935", legendFontColor: isDark ? "#FFF" : "#000", legendFontSize: 11 }
+              { name: `In`, population: totalIn, color: "#00c853", legendFontColor: isDark ? "#FFF" : "#000", legendFontSize: 12 },
+              { name: `Out`, population: totalOut, color: "#e53935", legendFontColor: isDark ? "#FFF" : "#000", legendFontSize: 12 }
             ]}
             width={screenWidth - 40} height={220} chartConfig={baseChartConfig} accessor="population" backgroundColor="transparent" paddingLeft="15" absolute
           />
         </View>
       ) : (
         <>
-          {/* Box Pemasukan - Hanya muncul jika showIn true */}
-          {showIn && (
+          {(viewFilter === 'all' || viewFilter === 'in') && (
             <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
               <Text style={[styles.subJudul, { color: "#00c853" }]}>Pemasukan {labelUnit(masukan)}</Text>
               {chartType === "bar" ? (
@@ -218,8 +206,7 @@ const Laporan: React.FC = () => {
             </View>
           )}
 
-          {/* Box Pengeluaran - Hanya muncul jika showOut true */}
-          {showOut && (
+          {(viewFilter === 'all' || viewFilter === 'out') && (
             <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
               <Text style={[styles.subJudul, { color: "#e53935" }]}>Pengeluaran {labelUnit(keluaran)}</Text>
               {chartType === "bar" ? (
@@ -241,12 +228,12 @@ const styles = StyleSheet.create({
   judul: { fontSize: 22, fontWeight: "bold", marginVertical: 15, textAlign: "center" },
   subJudul: { fontSize: 16, fontWeight: "600", marginBottom: 10, textAlign: "center" },
   chartBox: { marginBottom: 25, borderRadius: 12, padding: 15, elevation: 3, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 5 },
-  summaryCard: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingVertical: 15, borderRadius: 15, marginBottom: 20, marginHorizontal: 5, elevation: 2 },
-  summaryItem: { alignItems: 'center', flex: 1, padding: 5 },
-  summaryLabel: { fontSize: 11, color: "#888", textTransform: 'uppercase', marginBottom: 4 },
-  summaryValue: { fontSize: 16, fontWeight: "bold" },
-  miniHint: { fontSize: 9, color: '#aaa', marginTop: 2 },
-  divider: { width: 1, height: '70%' },
+  summaryCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10, borderRadius: 15, marginBottom: 20, elevation: 2 },
+  summaryItem: { alignItems: 'center', flex: 1, paddingVertical: 10, borderRadius: 10 },
+  activeTab: { backgroundColor: 'rgba(74, 144, 226, 0.15)', borderWidth: 1, borderColor: '#4a90e2' },
+  centerBtn: { width: 60, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginHorizontal: 5 },
+  summaryLabel: { fontSize: 10, color: "#888", textTransform: 'uppercase', marginBottom: 2 },
+  summaryValue: { fontSize: 14, fontWeight: "bold" },
   rowDropdown: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15, zIndex: 100 },
   dropdownContainer: { flex: 0.48, position: 'relative' },
   dropdownBtn: { padding: 12, borderRadius: 10, alignItems: 'center', elevation: 2 },
