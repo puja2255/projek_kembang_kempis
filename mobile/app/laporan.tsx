@@ -11,8 +11,8 @@ import {
 } from "react-native";
 import { BarChart, LineChart, PieChart } from "react-native-chart-kit";
 import { useTheme } from "../komponen/ThemeContext";
+import { API_URL } from "../config";
 
-import { API_URL } from '../config'; // Import dari file config
 const screenWidth = Dimensions.get("window").width;
 
 type LaporanItem = {
@@ -22,7 +22,7 @@ type LaporanItem = {
 };
 
 const Laporan: React.FC = () => {
-  const { theme } = useTheme(); // 🌙 DARK MODE
+  const { theme } = useTheme();
   const isDark = theme === "dark";
 
   const [dataLaporan, setDataLaporan] = useState<LaporanItem[]>([]);
@@ -64,12 +64,8 @@ const Laporan: React.FC = () => {
     })
   );
 
-  const pemasukan = dataTerakhir.map(
-    (item) => parseFloat(item.pemasukan) / 1000
-  );
-  const pengeluaran = dataTerakhir.map(
-    (item) => parseFloat(item.pengeluaran) / 1000
-  );
+  const pemasukan = dataTerakhir.map((item) => parseFloat(item.pemasukan) / 1000);
+  const pengeluaran = dataTerakhir.map((item) => parseFloat(item.pengeluaran) / 1000);
 
   const chartDataPemasukan = { labels, datasets: [{ data: pemasukan }] };
   const chartDataPengeluaran = { labels, datasets: [{ data: pengeluaran }] };
@@ -99,14 +95,14 @@ const Laporan: React.FC = () => {
 
   const pieData = [
     {
-      name: `Pemasukan (${((totalPemasukan / total) * 100).toFixed(1)}%)`,
+      name: "Pemasukan",
       population: totalPemasukan,
       color: "#00c853",
       legendFontColor: isDark ? "#FFFFFF" : "#000000",
       legendFontSize: 12,
     },
     {
-      name: `Pengeluaran (${((totalPengeluaran / total) * 100).toFixed(1)}%)`,
+      name: "Pengeluaran",
       population: totalPengeluaran,
       color: "#e53935",
       legendFontColor: isDark ? "#FFFFFF" : "#000000",
@@ -171,10 +167,11 @@ const Laporan: React.FC = () => {
             { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" },
           ]}
         >
-          <Text
-            style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}
-          >
+          <Text style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}>
             Komposisi Pemasukan vs Pengeluaran
+          </Text>
+          <Text style={{ textAlign: "center", marginBottom: 10, color: isDark ? "#FFF" : "#000" }}>
+            Pemasukan: {((totalPemasukan / total) * 100).toFixed(1)}% | Pengeluaran: {((totalPengeluaran / total) * 100).toFixed(1)}%
           </Text>
           <PieChart
             data={pieData}
@@ -184,7 +181,6 @@ const Laporan: React.FC = () => {
             accessor="population"
             backgroundColor="transparent"
             paddingLeft="15"
-            absolute
           />
         </View>
       ) : (
@@ -195,9 +191,7 @@ const Laporan: React.FC = () => {
               { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" },
             ]}
           >
-            <Text
-              style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}
-            >
+            <Text style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}>
               Pemasukan
             </Text>
             {chartType === "bar" ? (
@@ -230,9 +224,7 @@ const Laporan: React.FC = () => {
               { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" },
             ]}
           >
-            <Text
-              style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}
-            >
+            <Text style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}>
               Pengeluaran
             </Text>
             {chartType === "bar" ? (
@@ -268,23 +260,4 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 10 },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   judul: { fontSize: 20, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
-  subJudul: { fontSize: 16, fontWeight: "600", marginVertical: 10, textAlign: "center" },
-  chartBox: { marginBottom: 25, borderRadius: 12, padding: 10, elevation: 2 },
-  switchContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 20,
-    borderRadius: 8,
-    padding: 5,
-  },
-  switchButton: {
-    flex: 1,
-    paddingVertical: 8,
-    marginHorizontal: 4,
-    borderRadius: 6,
-    alignItems: "center",
-  },
-  switchText: { fontSize: 14, fontWeight: "500" },
-});
-
-export default Laporan;
+ 
