@@ -98,7 +98,6 @@ const Laporan: React.FC = () => {
 
   const { labels, masukan, keluaran } = dapatkanDataGrafik();
   
-  // Hitung total untuk ditampilkan di bawah diagram
   const totalIn = masukan.reduce((a, b) => a + b, 0);
   const totalOut = keluaran.reduce((a, b) => a + b, 0);
   const unit = timeFilter === "Tahun" ? "Juta" : "rb";
@@ -149,6 +148,19 @@ const Laporan: React.FC = () => {
         ))}
       </View>
 
+      {/* --- RINGKASAN TOTAL (Pindah ke Sini) --- */}
+      <View style={[styles.summaryCard, { backgroundColor: isDark ? "#1E1E1E" : "#F8F9FA" }]}>
+        <View style={styles.summaryItem}>
+          <Text style={styles.summaryLabel}>Total Masuk</Text>
+          <Text style={[styles.summaryValue, { color: "#00c853" }]}>Rp {formatCurrency(totalIn)} {unit}</Text>
+        </View>
+        <View style={[styles.divider, { backgroundColor: isDark ? "#333" : "#DDD" }]} />
+        <View style={styles.summaryItem}>
+          <Text style={styles.summaryLabel}>Total Keluar</Text>
+          <Text style={[styles.summaryValue, { color: "#e53935" }]}>Rp {formatCurrency(totalOut)} {unit}</Text>
+        </View>
+      </View>
+
       {chartType === "pie" ? (
         <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
           <Text style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}>Proporsi {timeFilter}</Text>
@@ -165,40 +177,25 @@ const Laporan: React.FC = () => {
             paddingLeft="15"
             absolute
           />
-          <View style={styles.summaryRow}>
-             <Text style={[styles.summaryText, { color: isDark ? "#CCC" : "#555" }]}>
-                Total Transaksi: <Text style={{fontWeight: 'bold', color: isDark ? "#FFF" : "#000"}}>Rp {formatCurrency(totalIn + totalOut)} {unit}</Text>
-             </Text>
-          </View>
         </View>
       ) : (
         <>
-          {/* Section Pemasukan */}
           <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
-            <Text style={[styles.subJudul, { color: "#00c853" }]}>Pemasukan ({unit})</Text>
+            <Text style={[styles.subJudul, { color: "#00c853" }]}>Grafik Pemasukan</Text>
             {chartType === "bar" ? (
               <BarChart data={{ labels, datasets: [{ data: masukan }] }} width={screenWidth - 40} height={200} yAxisLabel="" yAxisSuffix="" chartConfig={{...baseChartConfig, color: () => "#00c853"}} fromZero />
             ) : (
               <LineChart data={{ labels, datasets: [{ data: masukan }] }} width={screenWidth - 40} height={200} chartConfig={{...baseChartConfig, color: () => "#00c853"}} bezier />
             )}
-            <View style={styles.totalLabelBox}>
-               <Text style={styles.totalTitle}>Total Pemasukan {timeFilter}:</Text>
-               <Text style={[styles.totalValue, {color: "#00c853"}]}>Rp {formatCurrency(totalIn)} {unit}</Text>
-            </View>
           </View>
 
-          {/* Section Pengeluaran */}
           <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
-            <Text style={[styles.subJudul, { color: "#e53935" }]}>Pengeluaran ({unit})</Text>
+            <Text style={[styles.subJudul, { color: "#e53935" }]}>Grafik Pengeluaran</Text>
             {chartType === "bar" ? (
               <BarChart data={{ labels, datasets: [{ data: keluaran }] }} width={screenWidth - 40} height={200} yAxisLabel="" yAxisSuffix="" chartConfig={{...baseChartConfig, color: () => "#e53935"}} fromZero />
             ) : (
-              <LineChart data={{ labels, datasets: [{ data: keluaran }] }} width={screenWidth - 40} height={220} chartConfig={{...baseChartConfig, color: () => "#e53935"}} bezier />
+              <LineChart data={{ labels, datasets: [{ data: keluaran }] }} width={screenWidth - 40} height={200} chartConfig={{...baseChartConfig, color: () => "#e53935"}} bezier />
             )}
-            <View style={styles.totalLabelBox}>
-               <Text style={styles.totalTitle}>Total Pengeluaran {timeFilter}:</Text>
-               <Text style={[styles.totalValue, {color: "#e53935"}]}>Rp {formatCurrency(totalOut)} {unit}</Text>
-            </View>
           </View>
         </>
       )}
@@ -212,21 +209,28 @@ const styles = StyleSheet.create({
   judul: { fontSize: 22, fontWeight: "bold", marginVertical: 15, textAlign: "center" },
   subJudul: { fontSize: 16, fontWeight: "600", marginBottom: 10, textAlign: "center" },
   chartBox: { marginBottom: 25, borderRadius: 12, padding: 15, elevation: 3, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 5 },
-  switchContainer: { flexDirection: "row", justifyContent: "center", marginBottom: 15, borderRadius: 10, padding: 5 },
+  switchContainer: { flexDirection: "row", justifyContent: "center", marginBottom: 10, borderRadius: 10, padding: 5 },
   switchButton: { flex: 1, paddingVertical: 10, marginHorizontal: 3, borderRadius: 8, alignItems: "center" },
   switchText: { fontSize: 13, fontWeight: "600" },
-  // Styles baru untuk label total
-  totalLabelBox: {
-    marginTop: 15,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: "#eee",
-    alignItems: 'center'
+  
+  // Gaya baru untuk Ringkasan Total di Atas
+  summaryCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingVertical: 15,
+    borderRadius: 15,
+    marginBottom: 20,
+    marginHorizontal: 5,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
   },
-  totalTitle: { fontSize: 12, color: "#888", marginBottom: 2 },
-  totalValue: { fontSize: 18, fontWeight: "bold" },
-  summaryRow: { marginTop: 10, alignItems: 'center' },
-  summaryText: { fontSize: 14 }
+  summaryItem: { alignItems: 'center', flex: 1 },
+  summaryLabel: { fontSize: 11, color: "#888", textTransform: 'uppercase', marginBottom: 4 },
+  summaryValue: { fontSize: 16, fontWeight: "bold" },
+  divider: { width: 1, height: '70%' },
 });
 
 export default Laporan;
