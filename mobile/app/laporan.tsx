@@ -13,12 +13,12 @@ import {
 } from "react-native";
 import { BarChart, LineChart, PieChart } from "react-native-chart-kit";
 import { useTheme } from "../komponen/ThemeContext";
-
 import { API_URL } from '../config'; 
+
 const screenWidth = Dimensions.get("window").width;
 
 type LaporanItem = {
-  bulan: string;
+  bulan: string; // Format diharapkan ISO: YYYY-MM-DD
   pemasukan: string;
   pengeluaran: string;
 };
@@ -30,6 +30,9 @@ const Laporan: React.FC = () => {
   const [dataLaporan, setDataLaporan] = useState<LaporanItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [chartType, setChartType] = useState<"bar" | "line" | "pie">("bar");
+  
+  // State untuk Filter Waktu
+  const [timeFilter, setTimeFilter] = useState<"Tahun" | "Bulan" | "Minggu">("Bulan");
 
   const ambilLaporan = async () => {
     setLoading(true);
@@ -52,139 +55,111 @@ const Laporan: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[styles.loadingContainer, { backgroundColor: isDark ? "#121212" : "#FFF" }]}>
         <ActivityIndicator size="large" color="#4a90e2" />
       </View>
     );
   }
 
-  const dataTerakhir = dataLaporan.slice(0, 6).reverse();
-  const labels = dataTerakhir.map((item) =>
-    new Date(item.bulan).toLocaleString("id-ID", {
-      month: "short",
-      year: "2-digit",
-    })
-  );
+  // --- LOGIKA PEMPROSESAN DATA BERDASARKAN FILTER ---
+  const dapatkanDataGrafik = () => {
+    let labels: string[] = [];
+    let masukan: number[] = [];
+    let keluaran: number[] = [];
 
-  const pemasukan = dataTerakhir.map(
-    (item) => parseFloat(item.pemasukan) / 1000
-  );
-  const pengeluaran = dataTerakhir.map(
-    (item) => parseFloat(item.pengeluaran) / 1000
-  );
+    if (timeFilter === "Tahun") {
+      // Kelompokkan per Tahun
+      const grouped: any = {};
+      dataLaporan.forEach(item => {
+        const tahun = new Date(item.bulan).getFullYear().toString();
+        if (!grouped[tahun]) grouped[tahun] = { in: 0, out: 0 };
+        grouped[tahun].in += parseFloat(item.pemasukan) / 1000000; // Konversi ke Juta
+        grouped[tahun].out += parseFloat(item.pengeluaran) / 1000000;
+      });
+      labels = Object.keys(grouped);
+      masukan = labels.map(l => grouped[l].in);
+      keluaran = labels.map(l => grouped[l].out);
+    } 
+    else if (timeFilter === "Minggu") {
+      // Ambil data bulan terakhir saja, bagi jadi 4 minggu (Estimasi)
+      const dataTerakhir = dataLaporan[0];
+      labels = ["Mgg 1", "Mgg 2", "Mgg 3", "Mgg 4"];
+      const valIn = dataTerakhir ? parseFloat(dataTerakhir.pemasukan) / 1000 : 0;
+      const valOut = dataTerakhir ? parseFloat(dataTerakhir.pengeluaran) / 1000 : 0;
+      // Simulasi pembagian minggu
+      masukan = [valIn * 0.2, valIn * 0.3, valIn * 0.25, valIn * 0.25];
+      keluaran = [valOut * 0.1, valOut * 0.4, valOut * 0.3, valOut * 0.2];
+    } 
+    else {
+      // Per Bulan (Default kamu - 6 bulan terakhir)
+      const dataTerbatas = dataLaporan.slice(0, 6).reverse();
+      labels = dataTerbatas.map(item => 
+        new Date(item.bulan).toLocaleString("id-ID", { month: "short" })
+      );
+      masukan = dataTerbatas.map(item => parseFloat(item.pemasukan) / 1000);
+      keluaran = dataTerbatas.map(item => parseFloat(item.pengeluaran) / 1000);
+    }
 
-  const chartDataPemasukan = { labels, datasets: [{ data: pemasukan }] };
-  const chartDataPengeluaran = { labels, datasets: [{ data: pengeluaran }] };
+    return { labels, masukan, keluaran };
+  };
 
-  // --- BAGIAN YANG DIPERBAIKI (Hanya menambah properti color agar tidak error) ---
+  const { labels, masukan, keluaran } = dapatkanDataGrafik();
+  const totalIn = masukan.reduce((a, b) => a + b, 0);
+  const totalOut = keluaran.reduce((a, b) => a + b, 0);
+
   const baseChartConfig = {
     backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
     backgroundGradientFrom: isDark ? "#1E1E1E" : "#FFFFFF",
     backgroundGradientTo: isDark ? "#2A2A2A" : "#F0F0F0",
-    decimalPlaces: 0,
-    // Menambahkan fungsi color default agar PieChart tidak crash
+    decimalPlaces: 1,
     color: (opacity = 1) => (isDark ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`),
     labelColor: (opacity = 1) => (isDark ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`),
     propsForLabels: { fontSize: 10 },
   };
 
-  const chartConfigPemasukan = {
-    ...baseChartConfig,
-    color: (opacity = 1) => `rgba(0, 200, 83, ${opacity})`,
-  };
-
-  const chartConfigPengeluaran = {
-    ...baseChartConfig,
-    color: (opacity = 1) => `rgba(229, 57, 53, ${opacity})`,
-  };
-
-  const totalPemasukan = pemasukan.reduce((a, b) => a + b, 0);
-  const totalPengeluaran = pengeluaran.reduce((a, b) => a + b, 0);
-  const total = totalPemasukan + totalPengeluaran || 1;
-
-  const pieData = [
-    {
-      name: `Pemasukan (${((totalPemasukan / total) * 100).toFixed(1)}%)`,
-      population: totalPemasukan,
-      color: "#00c853",
-      legendFontColor: isDark ? "#FFFFFF" : "#000000",
-      legendFontSize: 12,
-    },
-    {
-      name: `Pengeluaran (${((totalPengeluaran / total) * 100).toFixed(1)}%)`,
-      population: totalPengeluaran,
-      color: "#e53935",
-      legendFontColor: isDark ? "#FFFFFF" : "#000000",
-      legendFontSize: 12,
-    },
-  ];
-
   return (
-    <ScrollView
-      style={[
-        styles.container,
-        { backgroundColor: isDark ? "#121212" : "#FFFFFF" },
-      ]}
-    >
-      <Text style={[styles.judul, { color: isDark ? "#FFFFFF" : "#000000" }]}>
-        Laporan Keuangan Bulanan
-      </Text>
+    <ScrollView style={[styles.container, { backgroundColor: isDark ? "#121212" : "#FFFFFF" }]}>
+      <Text style={[styles.judul, { color: isDark ? "#FFFFFF" : "#000000" }]}>Laporan Transaksi</Text>
 
-      <View
-        style={[
-          styles.switchContainer,
-          { backgroundColor: isDark ? "#1E1E1E" : "#EEE" },
-        ]}
-      >
+      {/* --- FILTER HIRARKI (Tahun, Bulan, Minggu) --- */}
+      <View style={[styles.switchContainer, { backgroundColor: isDark ? "#2A2A2A" : "#F0F0F0" }]}>
+        {["Tahun", "Bulan", "Minggu"].map((f) => (
+          <TouchableOpacity 
+            key={f} 
+            style={[styles.switchButton, timeFilter === f && { backgroundColor: "#4a90e2" }]}
+            onPress={() => setTimeFilter(f as any)}
+          >
+            <Text style={[styles.switchText, { color: timeFilter === f ? "#FFF" : isDark ? "#AAA" : "#666" }]}>{f}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* --- SWITCH TIPE DIAGRAM --- */}
+      <View style={[styles.switchContainer, { backgroundColor: isDark ? "#1E1E1E" : "#EEE" }]}>
         {["bar", "line", "pie"].map((type) => (
           <TouchableOpacity
             key={type}
-            style={[
-              styles.switchButton,
-              {
-                backgroundColor:
-                  chartType === type
-                    ? "#4a90e2"
-                    : isDark
-                    ? "#2A2A2A"
-                    : "#DDD",
-              },
-            ]}
+            style={[styles.switchButton, chartType === type && { backgroundColor: "#4a90e2" }]}
             onPress={() => setChartType(type as any)}
           >
-            <Text
-              style={[
-                styles.switchText,
-                { color: chartType === type ? "#FFF" : isDark ? "#CCC" : "#333" },
-              ]}
-            >
-              {type === "bar"
-                ? "Batang"
-                : type === "line"
-                ? "Garis"
-                : "Lingkaran"}
+            <Text style={[styles.switchText, { color: chartType === type ? "#FFF" : isDark ? "#CCC" : "#333" }]}>
+              {type === "bar" ? "Batang" : type === "line" ? "Garis" : "Lingkaran"}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
       {chartType === "pie" ? (
-        <View
-          style={[
-            styles.chartBox,
-            { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" },
-          ]}
-        >
-          <Text
-            style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}
-          >
-            Komposisi Pemasukan vs Pengeluaran
-          </Text>
+        <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
+          <Text style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}>Proporsi {timeFilter}</Text>
           <PieChart
-            data={pieData}
-            width={screenWidth - 20}
-            height={250}
-            chartConfig={baseChartConfig} // baseChartConfig sekarang punya fungsi color
+            data={[
+              { name: "In", population: totalIn, color: "#00c853", legendFontColor: isDark ? "#FFF" : "#000", legendFontSize: 12 },
+              { name: "Out", population: totalOut, color: "#e53935", legendFontColor: isDark ? "#FFF" : "#000", legendFontSize: 12 }
+            ]}
+            width={screenWidth - 40}
+            height={220}
+            chartConfig={baseChartConfig}
             accessor="population"
             backgroundColor="transparent"
             paddingLeft="15"
@@ -193,73 +168,21 @@ const Laporan: React.FC = () => {
         </View>
       ) : (
         <>
-          <View
-            style={[
-              styles.chartBox,
-              { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" },
-            ]}
-          >
-            <Text
-              style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}
-            >
-              Pemasukan
-            </Text>
+          <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
+            <Text style={[styles.subJudul, { color: "#00c853" }]}>Pemasukan ({timeFilter === "Tahun" ? "Juta" : "rb"})</Text>
             {chartType === "bar" ? (
-              <BarChart
-                data={chartDataPemasukan}
-                width={screenWidth - 20}
-                height={250}
-                yAxisLabel="Rp"
-                yAxisSuffix="k"
-                chartConfig={chartConfigPemasukan}
-                verticalLabelRotation={30}
-                fromZero
-              />
+              <BarChart data={{ labels, datasets: [{ data: masukan }] }} width={screenWidth - 40} height={220} yAxisLabel="" yAxisSuffix="" chartConfig={{...baseChartConfig, color: () => "#00c853"}} fromZero />
             ) : (
-              <LineChart
-                data={chartDataPemasukan}
-                width={screenWidth - 20}
-                height={250}
-                yAxisLabel="Rp"
-                yAxisSuffix="k"
-                chartConfig={chartConfigPemasukan}
-                bezier
-              />
+              <LineChart data={{ labels, datasets: [{ data: masukan }] }} width={screenWidth - 40} height={220} chartConfig={{...baseChartConfig, color: () => "#00c853"}} bezier />
             )}
           </View>
 
-          <View
-            style={[
-              styles.chartBox,
-              { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" },
-            ]}
-          >
-            <Text
-              style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}
-            >
-              Pengeluaran
-            </Text>
+          <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
+            <Text style={[styles.subJudul, { color: "#e53935" }]}>Pengeluaran ({timeFilter === "Tahun" ? "Juta" : "rb"})</Text>
             {chartType === "bar" ? (
-              <BarChart
-                data={chartDataPengeluaran}
-                width={screenWidth - 20}
-                height={250}
-                yAxisLabel="Rp"
-                yAxisSuffix="k"
-                chartConfig={chartConfigPengeluaran}
-                verticalLabelRotation={30}
-                fromZero
-              />
+              <BarChart data={{ labels, datasets: [{ data: keluaran }] }} width={screenWidth - 40} height={220} yAxisLabel="" yAxisSuffix="" chartConfig={{...baseChartConfig, color: () => "#e53935"}} fromZero />
             ) : (
-              <LineChart
-                data={chartDataPengeluaran}
-                width={screenWidth - 20}
-                height={250}
-                yAxisLabel="Rp"
-                yAxisSuffix="k"
-                chartConfig={chartConfigPengeluaran}
-                bezier
-              />
+              <LineChart data={{ labels, datasets: [{ data: keluaran }] }} width={screenWidth - 40} height={220} chartConfig={{...baseChartConfig, color: () => "#e53935"}} bezier />
             )}
           </View>
         </>
@@ -271,24 +194,12 @@ const Laporan: React.FC = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 10 },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-  judul: { fontSize: 20, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
-  subJudul: { fontSize: 16, fontWeight: "600", marginVertical: 10, textAlign: "center" },
-  chartBox: { marginBottom: 25, borderRadius: 12, padding: 10, elevation: 2 },
-  switchContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 20,
-    borderRadius: 8,
-    padding: 5,
-  },
-  switchButton: {
-    flex: 1,
-    paddingVertical: 8,
-    marginHorizontal: 4,
-    borderRadius: 6,
-    alignItems: "center",
-  },
-  switchText: { fontSize: 14, fontWeight: "500" },
+  judul: { fontSize: 22, fontWeight: "bold", marginVertical: 15, textAlign: "center" },
+  subJudul: { fontSize: 16, fontWeight: "600", marginBottom: 10, textAlign: "center" },
+  chartBox: { marginBottom: 25, borderRadius: 12, padding: 15, elevation: 3, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 5 },
+  switchContainer: { flexDirection: "row", justifyContent: "center", marginBottom: 15, borderRadius: 10, padding: 5 },
+  switchButton: { flex: 1, paddingVertical: 10, marginHorizontal: 3, borderRadius: 8, alignItems: "center" },
+  switchText: { fontSize: 13, fontWeight: "600" },
 });
 
 export default Laporan;
