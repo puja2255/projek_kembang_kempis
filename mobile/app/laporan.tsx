@@ -55,6 +55,7 @@ const Laporan: React.FC = () => {
     ambilLaporan();
   }, []);
 
+  // Fungsi format yang digunakan di tombol total dan legenda Pie Chart
   const formatValueDinamis = (nilai: number) => {
     if (nilai >= 1000000) return `Rp ${(nilai / 1000000).toLocaleString("id-ID", { maximumFractionDigits: 1 })} Juta`;
     if (nilai >= 1000) return `Rp ${(nilai / 1000).toLocaleString("id-ID", { maximumFractionDigits: 0 })} rb`;
@@ -161,7 +162,6 @@ const Laporan: React.FC = () => {
           <Text style={[styles.tabValue, { color: "#00c853" }]}>{formatValueDinamis(totalIn).replace('Rp ', '')}</Text>
         </TouchableOpacity>
         
-        {/* Tombol Simbol Tengah (DIUBAH JADI KOTAK) */}
         <TouchableOpacity 
           style={[styles.symbolBtnKotak, { backgroundColor: viewFilter === 'all' ? "#4a90e2" : isDark ? "#333" : "#E0E0E0" }]} 
           onPress={() => setViewFilter('all')}
@@ -183,8 +183,21 @@ const Laporan: React.FC = () => {
           <Text style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}>Proporsi {timeFilter}</Text>
           <PieChart
             data={[
-              { name: `In`, population: totalIn, color: "#00c853", legendFontColor: isDark ? "#FFF" : "#000", legendFontSize: 12 },
-              { name: `Out`, population: totalOut, color: "#e53935", legendFontColor: isDark ? "#FFF" : "#000", legendFontSize: 12 }
+              { 
+                // Format di sini disamakan dengan format tombol total
+                name: `In (${formatValueDinamis(totalIn).replace('Rp ', '')})`, 
+                population: totalIn, 
+                color: "#00c853", 
+                legendFontColor: isDark ? "#FFF" : "#000", 
+                legendFontSize: 12 
+              },
+              { 
+                name: `Out (${formatValueDinamis(totalOut).replace('Rp ', '')})`, 
+                population: totalOut, 
+                color: "#e53935", 
+                legendFontColor: isDark ? "#FFF" : "#000", 
+                legendFontSize: 12 
+              }
             ]}
             width={screenWidth - 40} height={220} chartConfig={baseChartConfig} accessor="population" backgroundColor="transparent" paddingLeft="15" absolute
           />
@@ -224,27 +237,13 @@ const styles = StyleSheet.create({
   judul: { fontSize: 22, fontWeight: "bold", marginVertical: 15, textAlign: "center" },
   subJudul: { fontSize: 16, fontWeight: "600", marginBottom: 10, textAlign: "center" },
   chartBox: { marginBottom: 25, borderRadius: 12, padding: 15, elevation: 3, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 5 },
-  
-  // Tab Filter Styles
   summaryCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 8, borderRadius: 15, marginBottom: 20, elevation: 3 },
   tabBtn: { alignItems: 'center', flex: 1, paddingVertical: 10, borderRadius: 12 },
   activeTab: { backgroundColor: 'rgba(74, 144, 226, 0.1)', borderWidth: 1, borderColor: '#4a90e2' },
-  
-  // TOMBOL KOTAK TENGAH
-  symbolBtnKotak: { 
-    width: 44, 
-    height: 44, 
-    borderRadius: 8, // Angka kecil untuk membuat bentuk kotak
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    marginHorizontal: 8, 
-    elevation: 2 
-  },
-  
+  symbolBtnKotak: { width: 44, height: 44, borderRadius: 8, justifyContent: 'center', alignItems: 'center', marginHorizontal: 8, elevation: 2 },
   symbolIcon: { fontSize: 20, fontWeight: 'bold' },
   tabLabel: { fontSize: 10, color: "#888", fontWeight: '600', textTransform: 'uppercase' },
   tabValue: { fontSize: 13, fontWeight: "bold" },
-
   rowDropdown: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15, zIndex: 100 },
   dropdownContainer: { flex: 0.48, position: 'relative' },
   dropdownBtn: { padding: 12, borderRadius: 10, alignItems: 'center', elevation: 2 },
