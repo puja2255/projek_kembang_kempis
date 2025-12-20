@@ -34,8 +34,6 @@ const Laporan: React.FC = () => {
 
   const [openPeriode, setOpenPeriode] = useState(false);
   const [openTipe, setOpenTipe] = useState(false);
-
-  // Filter tampilan: 'all' | 'in' | 'out'
   const [viewFilter, setViewFilter] = useState<'all' | 'in' | 'out'>('all');
 
   const ambilLaporan = async () => {
@@ -118,7 +116,7 @@ const Laporan: React.FC = () => {
     <ScrollView style={[styles.container, { backgroundColor: isDark ? "#121212" : "#FFFFFF" }]}>
       <Text style={[styles.judul, { color: isDark ? "#FFFFFF" : "#000000" }]}>Laporan Transaksi</Text>
 
-      {/* --- Dropdowns --- */}
+      {/* --- Filter Dropdown --- */}
       <View style={styles.rowDropdown}>
         <View style={styles.dropdownContainer}>
           <TouchableOpacity style={[styles.dropdownBtn, { backgroundColor: isDark ? "#1E1E1E" : "#F0F0F0" }]} onPress={() => { setOpenPeriode(!openPeriode); setOpenTipe(false); }}>
@@ -153,32 +151,30 @@ const Laporan: React.FC = () => {
         </View>
       </View>
 
-      {/* --- TOMBOL FILTER TRANSAKSI --- */}
+      {/* --- TAB FILTER DENGAN SIMBOL KOTAK --- */}
       <View style={[styles.summaryCard, { backgroundColor: isDark ? "#1E1E1E" : "#F8F9FA" }]}>
-        {/* Tombol Masuk */}
         <TouchableOpacity 
-          style={[styles.summaryItem, viewFilter === 'in' && styles.activeTab]} 
+          style={[styles.tabBtn, viewFilter === 'in' && styles.activeTab]} 
           onPress={() => setViewFilter('in')}
         >
-          <Text style={styles.summaryLabel}>Masuk</Text>
-          <Text style={[styles.summaryValue, { color: "#00c853" }]}>{formatValueDinamis(totalIn).replace('Rp ', '')}</Text>
+          <Text style={styles.tabLabel}>Masuk</Text>
+          <Text style={[styles.tabValue, { color: "#00c853" }]}>{formatValueDinamis(totalIn).replace('Rp ', '')}</Text>
         </TouchableOpacity>
         
-        {/* Tombol Tengah (Semua) */}
+        {/* Tombol Simbol Tengah (DIUBAH JADI KOTAK) */}
         <TouchableOpacity 
-          style={[styles.centerBtn, { backgroundColor: viewFilter === 'all' ? "#4a90e2" : isDark ? "#333" : "#DDD" }]} 
+          style={[styles.symbolBtnKotak, { backgroundColor: viewFilter === 'all' ? "#4a90e2" : isDark ? "#333" : "#E0E0E0" }]} 
           onPress={() => setViewFilter('all')}
         >
-          <Text style={{ color: viewFilter === 'all' ? "#FFF" : isDark ? "#AAA" : "#666", fontSize: 10, fontWeight: 'bold' }}>SEMUA</Text>
+          <Text style={[styles.symbolIcon, { color: viewFilter === 'all' ? "#FFF" : isDark ? "#888" : "#666" }]}>☷</Text>
         </TouchableOpacity>
         
-        {/* Tombol Keluar */}
         <TouchableOpacity 
-          style={[styles.summaryItem, viewFilter === 'out' && styles.activeTab]} 
+          style={[styles.tabBtn, viewFilter === 'out' && styles.activeTab]} 
           onPress={() => setViewFilter('out')}
         >
-          <Text style={styles.summaryLabel}>Keluar</Text>
-          <Text style={[styles.summaryValue, { color: "#e53935" }]}>{formatValueDinamis(totalOut).replace('Rp ', '')}</Text>
+          <Text style={styles.tabLabel}>Keluar</Text>
+          <Text style={[styles.tabValue, { color: "#e53935" }]}>{formatValueDinamis(totalOut).replace('Rp ', '')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -228,12 +224,27 @@ const styles = StyleSheet.create({
   judul: { fontSize: 22, fontWeight: "bold", marginVertical: 15, textAlign: "center" },
   subJudul: { fontSize: 16, fontWeight: "600", marginBottom: 10, textAlign: "center" },
   chartBox: { marginBottom: 25, borderRadius: 12, padding: 15, elevation: 3, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 5 },
-  summaryCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10, borderRadius: 15, marginBottom: 20, elevation: 2 },
-  summaryItem: { alignItems: 'center', flex: 1, paddingVertical: 10, borderRadius: 10 },
-  activeTab: { backgroundColor: 'rgba(74, 144, 226, 0.15)', borderWidth: 1, borderColor: '#4a90e2' },
-  centerBtn: { width: 60, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center', marginHorizontal: 5 },
-  summaryLabel: { fontSize: 10, color: "#888", textTransform: 'uppercase', marginBottom: 2 },
-  summaryValue: { fontSize: 14, fontWeight: "bold" },
+  
+  // Tab Filter Styles
+  summaryCard: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 8, borderRadius: 15, marginBottom: 20, elevation: 3 },
+  tabBtn: { alignItems: 'center', flex: 1, paddingVertical: 10, borderRadius: 12 },
+  activeTab: { backgroundColor: 'rgba(74, 144, 226, 0.1)', borderWidth: 1, borderColor: '#4a90e2' },
+  
+  // TOMBOL KOTAK TENGAH
+  symbolBtnKotak: { 
+    width: 44, 
+    height: 44, 
+    borderRadius: 8, // Angka kecil untuk membuat bentuk kotak
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    marginHorizontal: 8, 
+    elevation: 2 
+  },
+  
+  symbolIcon: { fontSize: 20, fontWeight: 'bold' },
+  tabLabel: { fontSize: 10, color: "#888", fontWeight: '600', textTransform: 'uppercase' },
+  tabValue: { fontSize: 13, fontWeight: "bold" },
+
   rowDropdown: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15, zIndex: 100 },
   dropdownContainer: { flex: 0.48, position: 'relative' },
   dropdownBtn: { padding: 12, borderRadius: 10, alignItems: 'center', elevation: 2 },
