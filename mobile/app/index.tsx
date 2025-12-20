@@ -20,8 +20,7 @@ import { useTheme } from '../komponen/ThemeContext';
 import { Transaksi, formatRupiah } from '../komponen/tipe';
 import { on as busOn } from '../komponen/eventBus';
 
-// *** GANTI DENGAN IP LOKAL KOMPUTER ANDA ***
-const API_URL: string = 'http://192.168.56.1:3000';
+import { API_URL } from '../config'; // Import dari file config
 
 const Home: React.FC = () => {
   const router = useRouter();
