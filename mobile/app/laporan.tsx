@@ -1,3 +1,5 @@
+// mobile/app/laporan.tsx
+
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -11,8 +13,8 @@ import {
 } from "react-native";
 import { BarChart, LineChart, PieChart } from "react-native-chart-kit";
 import { useTheme } from "../komponen/ThemeContext";
-import { API_URL } from "../config";
 
+import { API_URL } from '../config'; 
 const screenWidth = Dimensions.get("window").width;
 
 type LaporanItem = {
@@ -22,7 +24,7 @@ type LaporanItem = {
 };
 
 const Laporan: React.FC = () => {
-  const { theme } = useTheme();
+  const { theme } = useTheme(); 
   const isDark = theme === "dark";
 
   const [dataLaporan, setDataLaporan] = useState<LaporanItem[]>([]);
@@ -64,18 +66,25 @@ const Laporan: React.FC = () => {
     })
   );
 
-  const pemasukan = dataTerakhir.map((item) => parseFloat(item.pemasukan) / 1000);
-  const pengeluaran = dataTerakhir.map((item) => parseFloat(item.pengeluaran) / 1000);
+  const pemasukan = dataTerakhir.map(
+    (item) => parseFloat(item.pemasukan) / 1000
+  );
+  const pengeluaran = dataTerakhir.map(
+    (item) => parseFloat(item.pengeluaran) / 1000
+  );
 
   const chartDataPemasukan = { labels, datasets: [{ data: pemasukan }] };
   const chartDataPengeluaran = { labels, datasets: [{ data: pengeluaran }] };
 
+  // --- BAGIAN YANG DIPERBAIKI (Hanya menambah properti color agar tidak error) ---
   const baseChartConfig = {
     backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
     backgroundGradientFrom: isDark ? "#1E1E1E" : "#FFFFFF",
     backgroundGradientTo: isDark ? "#2A2A2A" : "#F0F0F0",
     decimalPlaces: 0,
-    labelColor: () => (isDark ? "#FFFFFF" : "#000000"),
+    // Menambahkan fungsi color default agar PieChart tidak crash
+    color: (opacity = 1) => (isDark ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`),
+    labelColor: (opacity = 1) => (isDark ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`),
     propsForLabels: { fontSize: 10 },
   };
 
@@ -95,14 +104,14 @@ const Laporan: React.FC = () => {
 
   const pieData = [
     {
-      name: "Pemasukan",
+      name: `Pemasukan (${((totalPemasukan / total) * 100).toFixed(1)}%)`,
       population: totalPemasukan,
       color: "#00c853",
       legendFontColor: isDark ? "#FFFFFF" : "#000000",
       legendFontSize: 12,
     },
     {
-      name: "Pengeluaran",
+      name: `Pengeluaran (${((totalPengeluaran / total) * 100).toFixed(1)}%)`,
       population: totalPengeluaran,
       color: "#e53935",
       legendFontColor: isDark ? "#FFFFFF" : "#000000",
@@ -121,7 +130,6 @@ const Laporan: React.FC = () => {
         Laporan Keuangan Bulanan
       </Text>
 
-      {/* Switch Chart */}
       <View
         style={[
           styles.switchContainer,
@@ -167,20 +175,20 @@ const Laporan: React.FC = () => {
             { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" },
           ]}
         >
-          <Text style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}>
+          <Text
+            style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}
+          >
             Komposisi Pemasukan vs Pengeluaran
-          </Text>
-          <Text style={{ textAlign: "center", marginBottom: 10, color: isDark ? "#FFF" : "#000" }}>
-            Pemasukan: {((totalPemasukan / total) * 100).toFixed(1)}% | Pengeluaran: {((totalPengeluaran / total) * 100).toFixed(1)}%
           </Text>
           <PieChart
             data={pieData}
             width={screenWidth - 20}
             height={250}
-            chartConfig={baseChartConfig}
+            chartConfig={baseChartConfig} // baseChartConfig sekarang punya fungsi color
             accessor="population"
             backgroundColor="transparent"
             paddingLeft="15"
+            absolute
           />
         </View>
       ) : (
@@ -191,7 +199,9 @@ const Laporan: React.FC = () => {
               { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" },
             ]}
           >
-            <Text style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}>
+            <Text
+              style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}
+            >
               Pemasukan
             </Text>
             {chartType === "bar" ? (
@@ -224,7 +234,9 @@ const Laporan: React.FC = () => {
               { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" },
             ]}
           >
-            <Text style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}>
+            <Text
+              style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}
+            >
               Pengeluaran
             </Text>
             {chartType === "bar" ? (
@@ -260,4 +272,23 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 10 },
   loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
   judul: { fontSize: 20, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
- 
+  subJudul: { fontSize: 16, fontWeight: "600", marginVertical: 10, textAlign: "center" },
+  chartBox: { marginBottom: 25, borderRadius: 12, padding: 10, elevation: 2 },
+  switchContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginBottom: 20,
+    borderRadius: 8,
+    padding: 5,
+  },
+  switchButton: {
+    flex: 1,
+    paddingVertical: 8,
+    marginHorizontal: 4,
+    borderRadius: 6,
+    alignItems: "center",
+  },
+  switchText: { fontSize: 14, fontWeight: "500" },
+});
+
+export default Laporan;
