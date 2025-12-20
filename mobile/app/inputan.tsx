@@ -13,8 +13,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { emit } from '../komponen/eventBus';
 import { useTheme } from '../komponen/ThemeContext';
 
-// *** GANTI DENGAN IP LOKAL KOMPUTER ANDA ***
-const API_URL = 'http://192.168.56.1:3000';
+import { API_URL } from '../config'; // Import dari file config
 
 const Inputan: React.FC<any> = ({ navigation }) => {
   const { theme } = useTheme(); // 🌙 DARK MODE
