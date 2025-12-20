@@ -66,7 +66,6 @@ const Laporan: React.FC = () => {
     let masukan: number[] = [];
     let keluaran: number[] = [];
 
-    // Ambil data mentah tanpa pembagi agar perhitungan total akurat
     if (timeFilter === "Tahun") {
       const grouped: any = {};
       dataLaporan.forEach(item => {
@@ -104,7 +103,7 @@ const Laporan: React.FC = () => {
   const totalIn = masukan.reduce((a, b) => a + b, 0);
   const totalOut = keluaran.reduce((a, b) => a + b, 0);
 
-  // Skala untuk Grafik (menghindari grafik terlihat datar)
+  // Skala untuk Grafik agar tidak terlihat datar
   const skalaData = (data: number[]) => data.map(v => v >= 1000000 ? v / 1000000 : v / 1000);
   const labelUnit = (data: number[]) => {
     const rataRata = data.reduce((a,b) => a+b, 0) / (data.length || 1);
@@ -173,15 +172,32 @@ const Laporan: React.FC = () => {
           <Text style={[styles.subJudul, { color: isDark ? "#FFF" : "#000" }]}>Proporsi {timeFilter}</Text>
           <PieChart
             data={[
-              { name: "In", population: totalIn, color: "#00c853", legendFontColor: isDark ? "#FFF" : "#000", legendFontSize: 12 },
-              { name: "Out", population: totalOut, color: "#e53935", legendFontColor: isDark ? "#FFF" : "#000", legendFontSize: 12 }
+              { 
+                name: `In (${formatValueDinamis(totalIn).replace('Rp ', '')})`, 
+                population: totalIn, 
+                color: "#00c853", 
+                legendFontColor: isDark ? "#FFF" : "#000", 
+                legendFontSize: 11 
+              },
+              { 
+                name: `Out (${formatValueDinamis(totalOut).replace('Rp ', '')})`, 
+                population: totalOut, 
+                color: "#e53935", 
+                legendFontColor: isDark ? "#FFF" : "#000", 
+                legendFontSize: 11 
+              }
             ]}
-            width={screenWidth - 40} height={220} chartConfig={baseChartConfig} accessor="population" backgroundColor="transparent" paddingLeft="15" absolute
+            width={screenWidth - 40} 
+            height={220} 
+            chartConfig={baseChartConfig} 
+            accessor="population" 
+            backgroundColor="transparent" 
+            paddingLeft="15" 
+            absolute
           />
         </View>
       ) : (
         <>
-          {/* Box Pemasukan */}
           <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
             <Text style={[styles.subJudul, { color: "#00c853" }]}>Pemasukan {labelUnit(masukan)}</Text>
             {chartType === "bar" ? (
@@ -191,7 +207,6 @@ const Laporan: React.FC = () => {
             )}
           </View>
 
-          {/* Box Pengeluaran */}
           <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
             <Text style={[styles.subJudul, { color: "#e53935" }]}>Pengeluaran {labelUnit(keluaran)}</Text>
             {chartType === "bar" ? (
