@@ -1,5 +1,3 @@
-// mobile/app/laporan.tsx
-
 import React, { useState, useEffect } from "react";
 import {
   View,
@@ -9,12 +7,12 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  TouchableOpacity,
 } from "react-native";
 import { BarChart, LineChart, PieChart } from "react-native-chart-kit";
+import { Picker } from "@react-native-picker/picker"; // Import Picker
 import { useTheme } from "../komponen/ThemeContext";
 
-import { API_URL } from '../config'; 
+import { API_URL } from '../config'; // Import dari file config
 const screenWidth = Dimensions.get("window").width;
 
 type LaporanItem = {
@@ -24,7 +22,7 @@ type LaporanItem = {
 };
 
 const Laporan: React.FC = () => {
-  const { theme } = useTheme(); 
+  const { theme } = useTheme(); // 🌙 DARK MODE
   const isDark = theme === "dark";
 
   const [dataLaporan, setDataLaporan] = useState<LaporanItem[]>([]);
@@ -76,13 +74,12 @@ const Laporan: React.FC = () => {
   const chartDataPemasukan = { labels, datasets: [{ data: pemasukan }] };
   const chartDataPengeluaran = { labels, datasets: [{ data: pengeluaran }] };
 
-  // --- BAGIAN YANG DIPERBAIKI (Hanya menambah properti color agar tidak error) ---
   const baseChartConfig = {
     backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
     backgroundGradientFrom: isDark ? "#1E1E1E" : "#FFFFFF",
     backgroundGradientTo: isDark ? "#2A2A2A" : "#F0F0F0",
     decimalPlaces: 0,
-    // Menambahkan fungsi color default agar PieChart tidak crash
+    // Perbaikan: Menambahkan fungsi color agar PieChart tidak error
     color: (opacity = 1) => (isDark ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`),
     labelColor: (opacity = 1) => (isDark ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`),
     propsForLabels: { fontSize: 10 },
@@ -104,14 +101,14 @@ const Laporan: React.FC = () => {
 
   const pieData = [
     {
-      name: `Pemasukan (${((totalPemasukan / total) * 100).toFixed(1)}%)`,
+      name: `Masuk`,
       population: totalPemasukan,
       color: "#00c853",
       legendFontColor: isDark ? "#FFFFFF" : "#000000",
       legendFontSize: 12,
     },
     {
-      name: `Pengeluaran (${((totalPengeluaran / total) * 100).toFixed(1)}%)`,
+      name: `Keluar`,
       population: totalPengeluaran,
       color: "#e53935",
       legendFontColor: isDark ? "#FFFFFF" : "#000000",
@@ -130,42 +127,27 @@ const Laporan: React.FC = () => {
         Laporan Keuangan Bulanan
       </Text>
 
+      {/* --- Pemilihan Diagram via Dropdown --- */}
       <View
-        style={[
-          styles.switchContainer,
-          { backgroundColor: isDark ? "#1E1E1E" : "#EEE" },
-        ]}
+        style={{
+          backgroundColor: isDark ? "#1E1E1E" : "#EEE",
+          borderRadius: 8,
+          marginBottom: 20,
+          borderWidth: 1,
+          borderColor: isDark ? "#333" : "#DDD",
+          overflow: "hidden"
+        }}
       >
-        {["bar", "line", "pie"].map((type) => (
-          <TouchableOpacity
-            key={type}
-            style={[
-              styles.switchButton,
-              {
-                backgroundColor:
-                  chartType === type
-                    ? "#4a90e2"
-                    : isDark
-                    ? "#2A2A2A"
-                    : "#DDD",
-              },
-            ]}
-            onPress={() => setChartType(type as any)}
-          >
-            <Text
-              style={[
-                styles.switchText,
-                { color: chartType === type ? "#FFF" : isDark ? "#CCC" : "#333" },
-              ]}
-            >
-              {type === "bar"
-                ? "Batang"
-                : type === "line"
-                ? "Garis"
-                : "Lingkaran"}
-            </Text>
-          </TouchableOpacity>
-        ))}
+        <Picker
+          selectedValue={chartType}
+          onValueChange={(itemValue) => setChartType(itemValue as any)}
+          style={{ color: isDark ? "#FFF" : "#000" }}
+          dropdownIconColor={isDark ? "#FFF" : "#000"}
+        >
+          <Picker.Item label="Diagram Batang" value="bar" />
+          <Picker.Item label="Diagram Garis" value="line" />
+          <Picker.Item label="Diagram Lingkaran" value="pie" />
+        </Picker>
       </View>
 
       {chartType === "pie" ? (
@@ -184,7 +166,7 @@ const Laporan: React.FC = () => {
             data={pieData}
             width={screenWidth - 20}
             height={250}
-            chartConfig={baseChartConfig} // baseChartConfig sekarang punya fungsi color
+            chartConfig={baseChartConfig}
             accessor="population"
             backgroundColor="transparent"
             paddingLeft="15"
@@ -274,21 +256,6 @@ const styles = StyleSheet.create({
   judul: { fontSize: 20, fontWeight: "bold", marginBottom: 15, textAlign: "center" },
   subJudul: { fontSize: 16, fontWeight: "600", marginVertical: 10, textAlign: "center" },
   chartBox: { marginBottom: 25, borderRadius: 12, padding: 10, elevation: 2 },
-  switchContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 20,
-    borderRadius: 8,
-    padding: 5,
-  },
-  switchButton: {
-    flex: 1,
-    paddingVertical: 8,
-    marginHorizontal: 4,
-    borderRadius: 6,
-    alignItems: "center",
-  },
-  switchText: { fontSize: 14, fontWeight: "500" },
 });
 
 export default Laporan;
