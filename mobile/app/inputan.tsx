@@ -1,3 +1,5 @@
+// mobile/app/inputan.tsx
+
 import React, { useState } from 'react';
 import {
   View,
@@ -12,7 +14,6 @@ import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { emit } from '../komponen/eventBus';
 import { useTheme } from '../komponen/ThemeContext';
-
 import { API_URL } from '../config'; // Import dari file config
 
 const Inputan: React.FC<any> = ({ navigation }) => {
@@ -39,7 +40,7 @@ const Inputan: React.FC<any> = ({ navigation }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          jumlah,
+          jumlah: parseFloat(jumlah), // kirim sebagai number
           jenis,
           deskripsi,
           tanggal: date.toISOString(),
@@ -54,17 +55,13 @@ const Inputan: React.FC<any> = ({ navigation }) => {
 
         Alert.alert('Sukses', 'Transaksi berhasil disimpan!');
         setFeedbackMessage('Transaksi berhasil disimpan!');
-        setJumlah('');
-        setDeskripsi('');
-        setDate(new Date());
+        resetForm();
         navigation.goBack();
       } else {
         const errorData = await response.json();
         Alert.alert(
           'Gagal',
-          `Gagal menyimpan transaksi: ${
-            errorData.error || response.statusText
-          }`
+          `Gagal menyimpan transaksi: ${errorData.error || response.statusText}`
         );
       }
     } catch (error) {
@@ -105,7 +102,10 @@ const Inputan: React.FC<any> = ({ navigation }) => {
         selectedValue={jenis}
         style={[
           styles.input,
-          { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF', color: isDark ? '#FFFFFF' : '#000000' },
+          {
+            backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+            color: isDark ? '#FFFFFF' : '#000000',
+          },
         ]}
         onValueChange={(itemValue: string) => setJenis(itemValue)}
       >
@@ -125,9 +125,12 @@ const Inputan: React.FC<any> = ({ navigation }) => {
             borderColor: isDark ? '#333' : '#ccc',
           },
         ]}
-        keyboardType="numeric"
+        keyboardType="number-pad"   // ✅ numpad angka
         value={jumlah}
-        onChangeText={setJumlah}
+        onChangeText={(text) => {
+          const filtered = text.replace(/[^0-9]/g, ''); // hanya angka
+          setJumlah(filtered);
+        }}
         placeholder="Contoh: 50000"
         placeholderTextColor={isDark ? '#888' : '#999'}
       />
