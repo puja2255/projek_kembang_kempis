@@ -36,6 +36,10 @@ const Laporan: React.FC = () => {
   const [openPeriode, setOpenPeriode] = useState(false);
   const [openTipe, setOpenTipe] = useState(false);
 
+  // --- NEW STATE: Untuk memfilter tampilan grafik ---
+  const [showIn, setShowIn] = useState(true);
+  const [showOut, setShowOut] = useState(true);
+
   const ambilLaporan = async () => {
     setLoading(true);
     try {
@@ -112,19 +116,29 @@ const Laporan: React.FC = () => {
     propsForLabels: { fontSize: 10 },
   };
 
+  // Fungsi toggle filter
+  const toggleFilter = (type: 'in' | 'out') => {
+    if (chartType === "pie") return; // Tidak berlaku untuk pie chart sesuai request
+
+    if (type === 'in') {
+      if (!showIn && showOut) { setShowIn(true); setShowOut(true); } // Jika sedang fokus In, kembalikan keduanya
+      else { setShowIn(true); setShowOut(false); } // Fokus In
+    } else {
+      if (!showOut && showIn) { setShowIn(true); setShowOut(true); } // Jika sedang fokus Out, kembalikan keduanya
+      else { setShowOut(true); setShowIn(false); } // Fokus Out
+    }
+  };
+
   if (loading) return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#4a90e2" /></View>;
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: isDark ? "#121212" : "#FFFFFF" }]}>
       <Text style={[styles.judul, { color: isDark ? "#FFFFFF" : "#000000" }]}>Laporan Transaksi</Text>
 
+      {/* --- Dropdowns --- */}
       <View style={styles.rowDropdown}>
-        {/* Dropdown Periode */}
         <View style={styles.dropdownContainer}>
-          <TouchableOpacity 
-            style={[styles.dropdownBtn, { backgroundColor: isDark ? "#1E1E1E" : "#F0F0F0" }]} 
-            onPress={() => { setOpenPeriode(!openPeriode); setOpenTipe(false); }}
-          >
+          <TouchableOpacity style={[styles.dropdownBtn, { backgroundColor: isDark ? "#1E1E1E" : "#F0F0F0" }]} onPress={() => { setOpenPeriode(!openPeriode); setOpenTipe(false); }}>
             <Text style={[styles.btnText, { color: isDark ? "#FFF" : "#000" }]}>{timeFilter} ▼</Text>
           </TouchableOpacity>
           {openPeriode && (
@@ -138,24 +152,16 @@ const Laporan: React.FC = () => {
           )}
         </View>
 
-        {/* Dropdown Tipe Diagram */}
         <View style={styles.dropdownContainer}>
-          <TouchableOpacity 
-            style={[styles.dropdownBtn, { backgroundColor: isDark ? "#1E1E1E" : "#F0F0F0" }]} 
-            onPress={() => { setOpenTipe(!openTipe); setOpenPeriode(false); }}
-          >
+          <TouchableOpacity style={[styles.dropdownBtn, { backgroundColor: isDark ? "#1E1E1E" : "#F0F0F0" }]} onPress={() => { setOpenTipe(!openTipe); setOpenPeriode(false); }}>
             <Text style={[styles.btnText, { color: isDark ? "#FFF" : "#000" }]}>
               {chartType === "bar" ? "Batang" : chartType === "line" ? "Garis" : "Lingkaran"} ▼
             </Text>
           </TouchableOpacity>
           {openTipe && (
             <View style={[styles.dropdownList, { backgroundColor: isDark ? "#2A2A2A" : "#FFF" }]}>
-              {[
-                { id: "bar", label: "Batang" },
-                { id: "line", label: "Garis" },
-                { id: "pie", label: "Lingkaran" }
-              ].map((item) => (
-                <TouchableOpacity key={item.id} style={styles.dropdownItem} onPress={() => { setChartType(item.id as any); setOpenTipe(false); }}>
+              {[{ id: "bar", label: "Batang" }, { id: "line", label: "Garis" }, { id: "pie", label: "Lingkaran" }].map((item) => (
+                <TouchableOpacity key={item.id} style={styles.dropdownItem} onPress={() => { setChartType(item.id as any); setOpenTipe(false); setShowIn(true); setShowOut(true); }}>
                   <Text style={{ color: isDark ? "#FFF" : "#000" }}>{item.label}</Text>
                 </TouchableOpacity>
               ))}
@@ -164,17 +170,27 @@ const Laporan: React.FC = () => {
         </View>
       </View>
 
-      {/* RINGKASAN TOTAL */}
+      {/* --- RINGKASAN TOTAL (Sekaligus Tombol Filter) --- */}
       <View style={[styles.summaryCard, { backgroundColor: isDark ? "#1E1E1E" : "#F8F9FA" }]}>
-        <View style={styles.summaryItem}>
+        <TouchableOpacity 
+          style={[styles.summaryItem, !showIn && chartType !== "pie" && { opacity: 0.3 }]} 
+          onPress={() => toggleFilter('in')}
+        >
           <Text style={styles.summaryLabel}>Total Masuk</Text>
           <Text style={[styles.summaryValue, { color: "#00c853" }]}>{formatValueDinamis(totalIn)}</Text>
-        </View>
+          {(!showIn && chartType !== "pie") && <Text style={styles.miniHint}>Klik untuk tampilkan</Text>}
+        </TouchableOpacity>
+        
         <View style={[styles.divider, { backgroundColor: isDark ? "#333" : "#DDD" }]} />
-        <View style={styles.summaryItem}>
+        
+        <TouchableOpacity 
+          style={[styles.summaryItem, !showOut && chartType !== "pie" && { opacity: 0.3 }]} 
+          onPress={() => toggleFilter('out')}
+        >
           <Text style={styles.summaryLabel}>Total Keluar</Text>
           <Text style={[styles.summaryValue, { color: "#e53935" }]}>{formatValueDinamis(totalOut)}</Text>
-        </View>
+          {(!showOut && chartType !== "pie") && <Text style={styles.miniHint}>Klik untuk tampilkan</Text>}
+        </TouchableOpacity>
       </View>
 
       {chartType === "pie" ? (
@@ -190,22 +206,29 @@ const Laporan: React.FC = () => {
         </View>
       ) : (
         <>
-          <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
-            <Text style={[styles.subJudul, { color: "#00c853" }]}>Pemasukan {labelUnit(masukan)}</Text>
-            {chartType === "bar" ? (
-              <BarChart data={{ labels, datasets: [{ data: skalaData(masukan) }] }} width={screenWidth - 40} height={200} yAxisLabel="" yAxisSuffix="" chartConfig={{...baseChartConfig, color: () => "#00c853"}} fromZero />
-            ) : (
-              <LineChart data={{ labels, datasets: [{ data: skalaData(masukan) }] }} width={screenWidth - 40} height={200} chartConfig={{...baseChartConfig, color: () => "#00c853"}} bezier />
-            )}
-          </View>
-          <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
-            <Text style={[styles.subJudul, { color: "#e53935" }]}>Pengeluaran {labelUnit(keluaran)}</Text>
-            {chartType === "bar" ? (
-              <BarChart data={{ labels, datasets: [{ data: skalaData(keluaran) }] }} width={screenWidth - 40} height={200} yAxisLabel="" yAxisSuffix="" chartConfig={{...baseChartConfig, color: () => "#e53935"}} fromZero />
-            ) : (
-              <LineChart data={{ labels, datasets: [{ data: skalaData(keluaran) }] }} width={screenWidth - 40} height={200} chartConfig={{...baseChartConfig, color: () => "#e53935"}} bezier />
-            )}
-          </View>
+          {/* Box Pemasukan - Hanya muncul jika showIn true */}
+          {showIn && (
+            <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
+              <Text style={[styles.subJudul, { color: "#00c853" }]}>Pemasukan {labelUnit(masukan)}</Text>
+              {chartType === "bar" ? (
+                <BarChart data={{ labels, datasets: [{ data: skalaData(masukan) }] }} width={screenWidth - 40} height={200} yAxisLabel="" yAxisSuffix="" chartConfig={{...baseChartConfig, color: () => "#00c853"}} fromZero />
+              ) : (
+                <LineChart data={{ labels, datasets: [{ data: skalaData(masukan) }] }} width={screenWidth - 40} height={200} chartConfig={{...baseChartConfig, color: () => "#00c853"}} bezier />
+              )}
+            </View>
+          )}
+
+          {/* Box Pengeluaran - Hanya muncul jika showOut true */}
+          {showOut && (
+            <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
+              <Text style={[styles.subJudul, { color: "#e53935" }]}>Pengeluaran {labelUnit(keluaran)}</Text>
+              {chartType === "bar" ? (
+                <BarChart data={{ labels, datasets: [{ data: skalaData(keluaran) }] }} width={screenWidth - 40} height={200} yAxisLabel="" yAxisSuffix="" chartConfig={{...baseChartConfig, color: () => "#e53935"}} fromZero />
+              ) : (
+                <LineChart data={{ labels, datasets: [{ data: skalaData(keluaran) }] }} width={screenWidth - 40} height={200} chartConfig={{...baseChartConfig, color: () => "#e53935"}} bezier />
+              )}
+            </View>
+          )}
         </>
       )}
     </ScrollView>
@@ -219,29 +242,16 @@ const styles = StyleSheet.create({
   subJudul: { fontSize: 16, fontWeight: "600", marginBottom: 10, textAlign: "center" },
   chartBox: { marginBottom: 25, borderRadius: 12, padding: 15, elevation: 3, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 5 },
   summaryCard: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingVertical: 15, borderRadius: 15, marginBottom: 20, marginHorizontal: 5, elevation: 2 },
-  summaryItem: { alignItems: 'center', flex: 1 },
+  summaryItem: { alignItems: 'center', flex: 1, padding: 5 },
   summaryLabel: { fontSize: 11, color: "#888", textTransform: 'uppercase', marginBottom: 4 },
   summaryValue: { fontSize: 16, fontWeight: "bold" },
+  miniHint: { fontSize: 9, color: '#aaa', marginTop: 2 },
   divider: { width: 1, height: '70%' },
-  
-  // Style Dropdown In-place (bukan popup)
   rowDropdown: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15, zIndex: 100 },
   dropdownContainer: { flex: 0.48, position: 'relative' },
   dropdownBtn: { padding: 12, borderRadius: 10, alignItems: 'center', elevation: 2 },
   btnText: { fontWeight: 'bold', fontSize: 14 },
-  dropdownList: { 
-    position: 'absolute', 
-    top: 50, 
-    left: 0, 
-    right: 0, 
-    borderRadius: 10, 
-    elevation: 5, 
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 2 }, 
-    shadowOpacity: 0.2, 
-    shadowRadius: 4,
-    zIndex: 999 
-  },
+  dropdownList: { position: 'absolute', top: 50, left: 0, right: 0, borderRadius: 10, elevation: 5, zIndex: 999 },
   dropdownItem: { padding: 12, borderBottomWidth: 0.5, borderBottomColor: 'rgba(0,0,0,0.1)', alignItems: 'center' },
 });
 
