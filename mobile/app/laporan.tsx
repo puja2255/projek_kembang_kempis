@@ -10,7 +10,6 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
-  Modal,
 } from "react-native";
 import { BarChart, LineChart, PieChart } from "react-native-chart-kit";
 import { useTheme } from "../komponen/ThemeContext";
@@ -33,9 +32,9 @@ const Laporan: React.FC = () => {
   const [chartType, setChartType] = useState<"bar" | "line" | "pie">("bar");
   const [timeFilter, setTimeFilter] = useState<"Tahun" | "Bulan" | "Minggu">("Bulan");
 
-  // State untuk Dropdown
-  const [showTimeModal, setShowTimeModal] = useState(false);
-  const [showTypeModal, setShowTypeModal] = useState(false);
+  // State untuk kontrol buka/tutup dropdown
+  const [openPeriode, setOpenPeriode] = useState(false);
+  const [openTipe, setOpenTipe] = useState(false);
 
   const ambilLaporan = async () => {
     setLoading(true);
@@ -113,63 +112,57 @@ const Laporan: React.FC = () => {
     propsForLabels: { fontSize: 10 },
   };
 
-  // Komponen Dropdown Item
-  const DropdownSelector = ({ label, value, onPress }: { label: string, value: string, onPress: () => void }) => (
-    <TouchableOpacity style={[styles.dropdownTrigger, { backgroundColor: isDark ? "#1E1E1E" : "#F0F0F0" }]} onPress={onPress}>
-      <Text style={{ color: isDark ? "#888" : "#666", fontSize: 12 }}>{label}:</Text>
-      <Text style={{ color: isDark ? "#FFF" : "#000", fontWeight: "bold" }}> {value} ▼</Text>
-    </TouchableOpacity>
-  );
-
   if (loading) return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#4a90e2" /></View>;
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: isDark ? "#121212" : "#FFFFFF" }]}>
       <Text style={[styles.judul, { color: isDark ? "#FFFFFF" : "#000000" }]}>Laporan Transaksi</Text>
 
-      {/* --- Bagian Dropdown --- */}
       <View style={styles.rowDropdown}>
-        <DropdownSelector 
-          label="Periode" 
-          value={timeFilter} 
-          onPress={() => setShowTimeModal(true)} 
-        />
-        <DropdownSelector 
-          label="Tipe" 
-          value={chartType === "bar" ? "Batang" : chartType === "line" ? "Garis" : "Lingkaran"} 
-          onPress={() => setShowTypeModal(true)} 
-        />
+        {/* Dropdown Periode */}
+        <View style={styles.dropdownContainer}>
+          <TouchableOpacity 
+            style={[styles.dropdownBtn, { backgroundColor: isDark ? "#1E1E1E" : "#F0F0F0" }]} 
+            onPress={() => { setOpenPeriode(!openPeriode); setOpenTipe(false); }}
+          >
+            <Text style={[styles.btnText, { color: isDark ? "#FFF" : "#000" }]}>{timeFilter} ▼</Text>
+          </TouchableOpacity>
+          {openPeriode && (
+            <View style={[styles.dropdownList, { backgroundColor: isDark ? "#2A2A2A" : "#FFF" }]}>
+              {["Tahun", "Bulan", "Minggu"].map((item) => (
+                <TouchableOpacity key={item} style={styles.dropdownItem} onPress={() => { setTimeFilter(item as any); setOpenPeriode(false); }}>
+                  <Text style={{ color: isDark ? "#FFF" : "#000" }}>{item}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* Dropdown Tipe Diagram */}
+        <View style={styles.dropdownContainer}>
+          <TouchableOpacity 
+            style={[styles.dropdownBtn, { backgroundColor: isDark ? "#1E1E1E" : "#F0F0F0" }]} 
+            onPress={() => { setOpenTipe(!openTipe); setOpenPeriode(false); }}
+          >
+            <Text style={[styles.btnText, { color: isDark ? "#FFF" : "#000" }]}>
+              {chartType === "bar" ? "Batang" : chartType === "line" ? "Garis" : "Lingkaran"} ▼
+            </Text>
+          </TouchableOpacity>
+          {openTipe && (
+            <View style={[styles.dropdownList, { backgroundColor: isDark ? "#2A2A2A" : "#FFF" }]}>
+              {[
+                { id: "bar", label: "Batang" },
+                { id: "line", label: "Garis" },
+                { id: "pie", label: "Lingkaran" }
+              ].map((item) => (
+                <TouchableOpacity key={item.id} style={styles.dropdownItem} onPress={() => { setChartType(item.id as any); setOpenTipe(false); }}>
+                  <Text style={{ color: isDark ? "#FFF" : "#000" }}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
       </View>
-
-      {/* Modal Dropdown Periode */}
-      <Modal visible={showTimeModal} transparent animationType="fade">
-        <TouchableOpacity style={styles.modalOverlay} onPress={() => setShowTimeModal(false)}>
-          <View style={[styles.modalContent, { backgroundColor: isDark ? "#1E1E1E" : "#FFF" }]}>
-            {["Tahun", "Bulan", "Minggu"].map((item) => (
-              <TouchableOpacity key={item} style={styles.modalItem} onPress={() => { setTimeFilter(item as any); setShowTimeModal(false); }}>
-                <Text style={{ color: isDark ? "#FFF" : "#000", fontWeight: timeFilter === item ? "bold" : "normal" }}>{item}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </TouchableOpacity>
-      </Modal>
-
-      {/* Modal Dropdown Tipe Diagram */}
-      <Modal visible={showTypeModal} transparent animationType="fade">
-        <TouchableOpacity style={styles.modalOverlay} onPress={() => setShowTypeModal(false)}>
-          <View style={[styles.modalContent, { backgroundColor: isDark ? "#1E1E1E" : "#FFF" }]}>
-            {[
-              { id: "bar", label: "Batang" },
-              { id: "line", label: "Garis" },
-              { id: "pie", label: "Lingkaran" }
-            ].map((item) => (
-              <TouchableOpacity key={item.id} style={styles.modalItem} onPress={() => { setChartType(item.id as any); setShowTypeModal(false); }}>
-                <Text style={{ color: isDark ? "#FFF" : "#000", fontWeight: chartType === item.id ? "bold" : "normal" }}>{item.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </TouchableOpacity>
-      </Modal>
 
       {/* RINGKASAN TOTAL */}
       <View style={[styles.summaryCard, { backgroundColor: isDark ? "#1E1E1E" : "#F8F9FA" }]}>
@@ -231,12 +224,25 @@ const styles = StyleSheet.create({
   summaryValue: { fontSize: 16, fontWeight: "bold" },
   divider: { width: 1, height: '70%' },
   
-  // Style Dropdown
-  rowDropdown: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15, paddingHorizontal: 5 },
-  dropdownTrigger: { flex: 0.48, padding: 12, borderRadius: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', elevation: 2 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { width: '80%', borderRadius: 15, padding: 10 },
-  modalItem: { padding: 15, borderBottomWidth: 0.5, borderBottomColor: '#ccc', alignItems: 'center' },
+  // Style Dropdown In-place (bukan popup)
+  rowDropdown: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15, zIndex: 100 },
+  dropdownContainer: { flex: 0.48, position: 'relative' },
+  dropdownBtn: { padding: 12, borderRadius: 10, alignItems: 'center', elevation: 2 },
+  btnText: { fontWeight: 'bold', fontSize: 14 },
+  dropdownList: { 
+    position: 'absolute', 
+    top: 50, 
+    left: 0, 
+    right: 0, 
+    borderRadius: 10, 
+    elevation: 5, 
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.2, 
+    shadowRadius: 4,
+    zIndex: 999 
+  },
+  dropdownItem: { padding: 12, borderBottomWidth: 0.5, borderBottomColor: 'rgba(0,0,0,0.1)', alignItems: 'center' },
 });
 
 export default Laporan;
