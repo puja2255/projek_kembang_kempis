@@ -12,7 +12,7 @@ import {
 import { BarChart, LineChart, PieChart } from "react-native-chart-kit";
 import { useTheme } from "../komponen/ThemeContext";
 
-const API_URL = "http://192.168.56.1:3000";
+import { API_URL } from '../config'; // Import dari file config
 const screenWidth = Dimensions.get("window").width;
 
 type LaporanItem = {
