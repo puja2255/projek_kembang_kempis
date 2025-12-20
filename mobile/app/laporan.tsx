@@ -18,7 +18,7 @@ import { API_URL } from '../config';
 const screenWidth = Dimensions.get("window").width;
 
 type LaporanItem = {
-  bulan: string; // Format diharapkan ISO: YYYY-MM-DD
+  bulan: string; 
   pemasukan: string;
   pengeluaran: string;
 };
@@ -30,8 +30,6 @@ const Laporan: React.FC = () => {
   const [dataLaporan, setDataLaporan] = useState<LaporanItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [chartType, setChartType] = useState<"bar" | "line" | "pie">("bar");
-  
-  // State untuk Filter Waktu
   const [timeFilter, setTimeFilter] = useState<"Tahun" | "Bulan" | "Minggu">("Bulan");
 
   const ambilLaporan = async () => {
@@ -61,19 +59,17 @@ const Laporan: React.FC = () => {
     );
   }
 
-  // --- LOGIKA PEMPROSESAN DATA BERDASARKAN FILTER ---
   const dapatkanDataGrafik = () => {
     let labels: string[] = [];
     let masukan: number[] = [];
     let keluaran: number[] = [];
 
     if (timeFilter === "Tahun") {
-      // Kelompokkan per Tahun
       const grouped: any = {};
       dataLaporan.forEach(item => {
         const tahun = new Date(item.bulan).getFullYear().toString();
         if (!grouped[tahun]) grouped[tahun] = { in: 0, out: 0 };
-        grouped[tahun].in += parseFloat(item.pemasukan) / 1000000; // Konversi ke Juta
+        grouped[tahun].in += parseFloat(item.pemasukan) / 1000000; 
         grouped[tahun].out += parseFloat(item.pengeluaran) / 1000000;
       });
       labels = Object.keys(grouped);
@@ -81,17 +77,14 @@ const Laporan: React.FC = () => {
       keluaran = labels.map(l => grouped[l].out);
     } 
     else if (timeFilter === "Minggu") {
-      // Ambil data bulan terakhir saja, bagi jadi 4 minggu (Estimasi)
       const dataTerakhir = dataLaporan[0];
       labels = ["Mgg 1", "Mgg 2", "Mgg 3", "Mgg 4"];
       const valIn = dataTerakhir ? parseFloat(dataTerakhir.pemasukan) / 1000 : 0;
       const valOut = dataTerakhir ? parseFloat(dataTerakhir.pengeluaran) / 1000 : 0;
-      // Simulasi pembagian minggu
       masukan = [valIn * 0.2, valIn * 0.3, valIn * 0.25, valIn * 0.25];
       keluaran = [valOut * 0.1, valOut * 0.4, valOut * 0.3, valOut * 0.2];
     } 
     else {
-      // Per Bulan (Default kamu - 6 bulan terakhir)
       const dataTerbatas = dataLaporan.slice(0, 6).reverse();
       labels = dataTerbatas.map(item => 
         new Date(item.bulan).toLocaleString("id-ID", { month: "short" })
@@ -104,8 +97,15 @@ const Laporan: React.FC = () => {
   };
 
   const { labels, masukan, keluaran } = dapatkanDataGrafik();
+  
+  // Hitung total untuk ditampilkan di bawah diagram
   const totalIn = masukan.reduce((a, b) => a + b, 0);
   const totalOut = keluaran.reduce((a, b) => a + b, 0);
+  const unit = timeFilter === "Tahun" ? "Juta" : "rb";
+
+  const formatCurrency = (val: number) => {
+    return val.toLocaleString("id-ID", { maximumFractionDigits: 1 });
+  };
 
   const baseChartConfig = {
     backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
@@ -121,7 +121,7 @@ const Laporan: React.FC = () => {
     <ScrollView style={[styles.container, { backgroundColor: isDark ? "#121212" : "#FFFFFF" }]}>
       <Text style={[styles.judul, { color: isDark ? "#FFFFFF" : "#000000" }]}>Laporan Transaksi</Text>
 
-      {/* --- FILTER HIRARKI (Tahun, Bulan, Minggu) --- */}
+      {/* Filter Waktu */}
       <View style={[styles.switchContainer, { backgroundColor: isDark ? "#2A2A2A" : "#F0F0F0" }]}>
         {["Tahun", "Bulan", "Minggu"].map((f) => (
           <TouchableOpacity 
@@ -134,7 +134,7 @@ const Laporan: React.FC = () => {
         ))}
       </View>
 
-      {/* --- SWITCH TIPE DIAGRAM --- */}
+      {/* Filter Tipe Diagram */}
       <View style={[styles.switchContainer, { backgroundColor: isDark ? "#1E1E1E" : "#EEE" }]}>
         {["bar", "line", "pie"].map((type) => (
           <TouchableOpacity
@@ -165,25 +165,40 @@ const Laporan: React.FC = () => {
             paddingLeft="15"
             absolute
           />
+          <View style={styles.summaryRow}>
+             <Text style={[styles.summaryText, { color: isDark ? "#CCC" : "#555" }]}>
+                Total Transaksi: <Text style={{fontWeight: 'bold', color: isDark ? "#FFF" : "#000"}}>Rp {formatCurrency(totalIn + totalOut)} {unit}</Text>
+             </Text>
+          </View>
         </View>
       ) : (
         <>
+          {/* Section Pemasukan */}
           <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
-            <Text style={[styles.subJudul, { color: "#00c853" }]}>Pemasukan ({timeFilter === "Tahun" ? "Juta" : "rb"})</Text>
+            <Text style={[styles.subJudul, { color: "#00c853" }]}>Pemasukan ({unit})</Text>
             {chartType === "bar" ? (
-              <BarChart data={{ labels, datasets: [{ data: masukan }] }} width={screenWidth - 40} height={220} yAxisLabel="" yAxisSuffix="" chartConfig={{...baseChartConfig, color: () => "#00c853"}} fromZero />
+              <BarChart data={{ labels, datasets: [{ data: masukan }] }} width={screenWidth - 40} height={200} yAxisLabel="" yAxisSuffix="" chartConfig={{...baseChartConfig, color: () => "#00c853"}} fromZero />
             ) : (
-              <LineChart data={{ labels, datasets: [{ data: masukan }] }} width={screenWidth - 40} height={220} chartConfig={{...baseChartConfig, color: () => "#00c853"}} bezier />
+              <LineChart data={{ labels, datasets: [{ data: masukan }] }} width={screenWidth - 40} height={200} chartConfig={{...baseChartConfig, color: () => "#00c853"}} bezier />
             )}
+            <View style={styles.totalLabelBox}>
+               <Text style={styles.totalTitle}>Total Pemasukan {timeFilter}:</Text>
+               <Text style={[styles.totalValue, {color: "#00c853"}]}>Rp {formatCurrency(totalIn)} {unit}</Text>
+            </View>
           </View>
 
+          {/* Section Pengeluaran */}
           <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
-            <Text style={[styles.subJudul, { color: "#e53935" }]}>Pengeluaran ({timeFilter === "Tahun" ? "Juta" : "rb"})</Text>
+            <Text style={[styles.subJudul, { color: "#e53935" }]}>Pengeluaran ({unit})</Text>
             {chartType === "bar" ? (
-              <BarChart data={{ labels, datasets: [{ data: keluaran }] }} width={screenWidth - 40} height={220} yAxisLabel="" yAxisSuffix="" chartConfig={{...baseChartConfig, color: () => "#e53935"}} fromZero />
+              <BarChart data={{ labels, datasets: [{ data: keluaran }] }} width={screenWidth - 40} height={200} yAxisLabel="" yAxisSuffix="" chartConfig={{...baseChartConfig, color: () => "#e53935"}} fromZero />
             ) : (
               <LineChart data={{ labels, datasets: [{ data: keluaran }] }} width={screenWidth - 40} height={220} chartConfig={{...baseChartConfig, color: () => "#e53935"}} bezier />
             )}
+            <View style={styles.totalLabelBox}>
+               <Text style={styles.totalTitle}>Total Pengeluaran {timeFilter}:</Text>
+               <Text style={[styles.totalValue, {color: "#e53935"}]}>Rp {formatCurrency(totalOut)} {unit}</Text>
+            </View>
           </View>
         </>
       )}
@@ -200,6 +215,18 @@ const styles = StyleSheet.create({
   switchContainer: { flexDirection: "row", justifyContent: "center", marginBottom: 15, borderRadius: 10, padding: 5 },
   switchButton: { flex: 1, paddingVertical: 10, marginHorizontal: 3, borderRadius: 8, alignItems: "center" },
   switchText: { fontSize: 13, fontWeight: "600" },
+  // Styles baru untuk label total
+  totalLabelBox: {
+    marginTop: 15,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+    alignItems: 'center'
+  },
+  totalTitle: { fontSize: 12, color: "#888", marginBottom: 2 },
+  totalValue: { fontSize: 18, fontWeight: "bold" },
+  summaryRow: { marginTop: 10, alignItems: 'center' },
+  summaryText: { fontSize: 14 }
 });
 
 export default Laporan;
