@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, Pressable, Alert } from 'react-native';
+import { Stack, useRouter, Link } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../komponen/ThemeContext';
-import { Link } from 'expo-router';
 import { getProfile, Profile } from '../komponen/profileStorage';
 
 export default function Profil() {
+  const router = useRouter();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -17,66 +19,108 @@ export default function Profil() {
   if (!profile) return null;
 
   return (
-    <View
-      style={{
-        flex: 1,
-        padding: 20,
-        backgroundColor: isDark ? '#121212' : '#FFFFFF',
-      }}
-    >
-      {/* Avatar & Info */}
-      <View style={{ alignItems: 'center', marginBottom: 20 }}>
-        <Image
-          source={{ uri: profile.foto }}
-          style={{
-            width: 100,
-            height: 100,
-            borderRadius: 50,
-            marginBottom: 10,
-          }}
-        />
+    <>
+      {/* ================= HEADER ================= */}
+      <Stack.Screen
+        options={{
+          headerTitle: 'Profil',
+          headerTitleAlign: 'center',
+          headerStyle: {
+            backgroundColor: isDark ? '#121212' : '#FFFFFF',
+          },
+          headerTintColor: isDark ? '#FFFFFF' : '#000000',
 
-        <Text
-          style={{
-            fontSize: 18,
-            fontWeight: 'bold',
-            color: isDark ? '#FFF' : '#000',
-          }}
-        >
-          {profile.nama}
-        </Text>
+          // 🔙 BACK BUTTON
+          headerLeft: () => (
+            <Pressable
+              onPress={() => router.back()}
+              style={{ paddingHorizontal: 12 }}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={22}
+                color={isDark ? '#FFF' : '#000'}
+              />
+            </Pressable>
+          ),
 
-        <Text style={{ color: '#888' }}>{profile.email}</Text>
+          // 👤 AVATAR KANAN (foto profil)
+          headerRight: () => (
+            <Image
+              source={{ uri: profile.foto }}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                marginRight: 12,
+              }}
+            />
+          ),
+        }}
+      />
 
-        {profile.bio ? (
+      {/* ================= KONTEN ================= */}
+      <View
+        style={{
+          flex: 1,
+          padding: 20,
+          backgroundColor: isDark ? '#121212' : '#FFFFFF',
+        }}
+      >
+        {/* Avatar & Info */}
+        <View style={{ alignItems: 'center', marginBottom: 20 }}>
+          <Image
+            source={{ uri: profile.foto }}
+            style={{
+              width: 100,
+              height: 100,
+              borderRadius: 50,
+              marginBottom: 10,
+            }}
+          />
+
           <Text
             style={{
-              textAlign: 'center',
-              marginTop: 6,
-              color: isDark ? '#CCC' : '#555',
+              fontSize: 18,
+              fontWeight: 'bold',
+              color: isDark ? '#FFF' : '#000',
             }}
           >
-            {profile.bio}
+            {profile.nama}
           </Text>
-        ) : null}
+
+          <Text style={{ color: '#888' }}>{profile.email}</Text>
+
+          {profile.bio ? (
+            <Text
+              style={{
+                textAlign: 'center',
+                marginTop: 6,
+                color: isDark ? '#CCC' : '#555',
+              }}
+            >
+              {profile.bio}
+            </Text>
+          ) : null}
+        </View>
+
+        {/* Menu */}
+        <Link href="/edit-profile" asChild>
+          <MenuItem title="Edit Profil" />
+        </Link>
+
+        <MenuItem
+          title="Logout"
+          danger
+          onPress={() =>
+            Alert.alert('Logout', 'Yakin ingin logout?', [
+              { text: 'Batal', style: 'cancel' },
+              { text: 'Logout', style: 'destructive' },
+            ])
+          }
+        />
       </View>
-
-      {/* Menu */}
-      <Link href="/edit-profile" asChild>
-        <MenuItem title="Edit Profil" />
-      </Link>
-
-      <MenuItem
-        title="Logout"
-        danger
-        onPress={() =>
-          Alert.alert('Logout', 'Yakin ingin logout?', [
-            { text: 'Batal', style: 'cancel' },
-            { text: 'Logout', style: 'destructive' },
-          ])
-        }
-      />
-    </View>
+    </>
   );
 }
 

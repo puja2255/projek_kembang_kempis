@@ -6,16 +6,18 @@ import {
   Button,
   Image,
   Alert,
+  Pressable,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../komponen/ThemeContext';
 import { getProfile, saveProfile, Profile } from '../komponen/profileStorage';
 
 export default function EditProfil() {
+  const router = useRouter();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const router = useRouter();
 
   const [profile, setProfile] = useState<Profile | null>(null);
 
@@ -59,81 +61,118 @@ export default function EditProfil() {
   };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        padding: 16,
-        backgroundColor: isDark ? '#121212' : '#FFFFFF',
-      }}
-    >
-      <Text
+    <>
+      {/* ================= HEADER ================= */}
+      <Stack.Screen
+        options={{
+          headerTitle: 'Edit Profil',
+          headerTitleAlign: 'center',
+          headerStyle: {
+            backgroundColor: isDark ? '#121212' : '#FFFFFF',
+          },
+          headerTintColor: isDark ? '#FFFFFF' : '#000000',
+
+          // 🔙 BACK BUTTON
+          headerLeft: () => (
+            <Pressable
+              onPress={() => router.back()}
+              style={{ paddingHorizontal: 12 }}
+            >
+              <Ionicons
+                name="arrow-back"
+                size={22}
+                color={isDark ? '#FFF' : '#000'}
+              />
+            </Pressable>
+          ),
+
+          // 👤 AVATAR KANAN
+          headerRight: () => (
+            <Image
+              source={{ uri: profile.foto }}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 16,
+                marginRight: 12,
+              }}
+            />
+          ),
+        }}
+      />
+
+      {/* ================= KONTEN ================= */}
+      <View
         style={{
-          fontSize: 18,
-          fontWeight: 'bold',
-          marginBottom: 16,
-          color: isDark ? '#FFF' : '#000',
+          flex: 1,
+          padding: 16,
+          backgroundColor: isDark ? '#121212' : '#FFFFFF',
         }}
       >
-        Edit Profil
-      </Text>
+        {/* Foto Profil */}
+        <Image
+          source={{ uri: profile.foto }}
+          style={{
+            width: 120,
+            height: 120,
+            borderRadius: 60,
+            alignSelf: 'center',
+            marginBottom: 10,
+          }}
+        />
+        <Button title="Ganti Foto" onPress={pilihFoto} />
 
-      {/* Foto Profil */}
-      <Image
-        source={{ uri: profile.foto }}
-        style={{
-          width: 120,
-          height: 120,
-          borderRadius: 60,
-          alignSelf: 'center',
-          marginBottom: 10,
-        }}
-      />
-      <Button title="Ganti Foto" onPress={pilihFoto} />
+        {/* Nama */}
+        <TextInput
+          value={profile.nama}
+          onChangeText={(v) => setProfile({ ...profile, nama: v })}
+          placeholder="Nama"
+          placeholderTextColor={isDark ? '#888' : '#999'}
+          style={[
+            styles.input,
+            {
+              color: isDark ? '#FFF' : '#000',
+              borderBottomColor: isDark ? '#444' : '#CCC',
+            },
+          ]}
+        />
 
-      {/* Input Nama */}
-      <TextInput
-        value={profile.nama}
-        onChangeText={(v) => setProfile({ ...profile, nama: v })}
-        placeholder="Nama"
-        placeholderTextColor={isDark ? '#888' : '#999'}
-        style={[
-          styles.input,
-          { color: isDark ? '#FFF' : '#000', borderBottomColor: isDark ? '#444' : '#CCC' },
-        ]}
-      />
+        {/* Email */}
+        <TextInput
+          value={profile.email}
+          onChangeText={(v) => setProfile({ ...profile, email: v })}
+          placeholder="Email"
+          placeholderTextColor={isDark ? '#888' : '#999'}
+          style={[
+            styles.input,
+            {
+              color: isDark ? '#FFF' : '#000',
+              borderBottomColor: isDark ? '#444' : '#CCC',
+            },
+          ]}
+        />
 
-      {/* Input Email */}
-      <TextInput
-        value={profile.email}
-        onChangeText={(v) => setProfile({ ...profile, email: v })}
-        placeholder="Email"
-        placeholderTextColor={isDark ? '#888' : '#999'}
-        style={[
-          styles.input,
-          { color: isDark ? '#FFF' : '#000', borderBottomColor: isDark ? '#444' : '#CCC' },
-        ]}
-      />
+        {/* Bio */}
+        <TextInput
+          value={profile.bio}
+          onChangeText={(v) => setProfile({ ...profile, bio: v })}
+          placeholder="Bio"
+          placeholderTextColor={isDark ? '#888' : '#999'}
+          multiline
+          style={[
+            styles.input,
+            {
+              height: 80,
+              textAlignVertical: 'top',
+              color: isDark ? '#FFF' : '#000',
+              borderBottomColor: isDark ? '#444' : '#CCC',
+            },
+          ]}
+        />
 
-      {/* Bio */}
-      <TextInput
-        value={profile.bio}
-        onChangeText={(v) => setProfile({ ...profile, bio: v })}
-        placeholder="Bio"
-        placeholderTextColor={isDark ? '#888' : '#999'}
-        multiline
-        style={[
-          styles.input,
-          {
-            height: 80,
-            textAlignVertical: 'top',
-            color: isDark ? '#FFF' : '#000',
-            borderBottomColor: isDark ? '#444' : '#CCC',
-          },
-        ]}
-      />
-
-      <Button title="Simpan Perubahan" onPress={simpan} />
-    </View>
+        <Button title="Simpan Perubahan" onPress={simpan} />
+      </View>
+    </>
   );
 }
 
