@@ -90,19 +90,20 @@ export default function LogoutPage() {
 
         {/* BUTTON */}
         <Pressable
-          onPress={handleLogout}
-          style={{
-            width: "100%",
-            paddingVertical: 14,
-            borderRadius: 12,
+        onPress={handleLogout}
+        style={{
+            paddingHorizontal: 28,
+            paddingVertical: 12,
+            borderRadius: 999,
             backgroundColor: "#EF4444",
-            alignItems: "center",
-          }}
+            alignSelf: "center",
+        }}
         >
-          <Text style={{ color: "#FFF", fontWeight: "600" }}>
+        <Text style={{ color: "#FFF", fontWeight: "600" }}>
             Logout
-          </Text>
+        </Text>
         </Pressable>
+
 
         <Pressable
           onPress={() => router.back()}
