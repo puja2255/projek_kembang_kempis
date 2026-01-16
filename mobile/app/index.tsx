@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   TextInput,
   Platform,
-  Modal, // Tambahan untuk pop-up
+  Modal,
 } from 'react-native';
 
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -34,14 +34,12 @@ const Home: React.FC = () => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>(''); 
   
-  // State baru untuk filter jenis
-  const [filterJenis, setFilterJenis] = useState<'Semua' | 'Pemasukan' | 'Pengeluaran'>('Semua');
-
-  // --- ⬅️ STATE BARU: Modal & Filter Waktu ---
+  // --- ⬅️ SEMUA STATE FILTER DISATUKAN ---
   const [modalVisible, setModalVisible] = useState(false);
+  const [filterJenis, setFilterJenis] = useState<'Semua' | 'Pemasukan' | 'Pengeluaran'>('Semua');
+  const [modeFilterWaktu, setModeFilterWaktu] = useState<'Semua' | 'Hari' | 'Bulan' | 'Tahun'>('Semua');
   const [tanggalPilihan, setTanggalPilihan] = useState<Date>(new Date());
   const [showPicker, setShowPicker] = useState(false);
-  const [modeFilterWaktu, setModeFilterWaktu] = useState<'Semua' | 'Hari' | 'Bulan' | 'Tahun'>('Semua');
 
   const ambilData = async () => {
     setLoading(true);
@@ -112,7 +110,6 @@ const Home: React.FC = () => {
 
   const isDark = theme === 'dark';
 
-  // --- ⬅️ FUNGSI BARU: Konfirmasi Tanggal ---
   const handleConfirmDate = (event: any, date?: Date) => {
     setShowPicker(Platform.OS === 'ios');
     if (date) {
@@ -120,7 +117,7 @@ const Home: React.FC = () => {
     }
   };
 
-  // Logika filter (Gabungan search, kategori jenis, dan WAKTU)
+  // --- ⬅️ LOGIKA FILTER GABUNGAN (SEARCH + JENIS + WAKTU) ---
   const filteredData = data.filter((item) => {
     const matchesSearch = (item.deskripsi || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesJenis = filterJenis === 'Semua' || item.jenis === filterJenis;
@@ -202,7 +199,7 @@ const Home: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Search Bar Row */}
+      {/* Search Bar Row (Satu-satunya input di layar utama) */}
       <View style={styles.searchRow}>
         <TextInput
           style={[
@@ -219,45 +216,67 @@ const Home: React.FC = () => {
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
-        {/* Tombol Buka Pop-up Filter */}
         <TouchableOpacity 
-          style={[styles.filterButton, { backgroundColor: modeFilterWaktu !== 'Semua' ? '#2d9cdb' : (isDark ? '#1E1E1E' : '#fff') }]}
+          style={[styles.filterButton, { backgroundColor: (modeFilterWaktu !== 'Semua' || filterJenis !== 'Semua') ? '#2d9cdb' : (isDark ? '#1E1E1E' : '#fff') }]}
           onPress={() => setModalVisible(true)}
         >
           <MaterialCommunityIcons 
-            name="filter-variant" 
+            name="tune-vertical" 
             size={24} 
-            color={modeFilterWaktu !== 'Semua' ? '#fff' : (isDark ? '#aaa' : '#666')} 
+            color={(modeFilterWaktu !== 'Semua' || filterJenis !== 'Semua') ? '#fff' : (isDark ? '#aaa' : '#666')} 
           />
         </TouchableOpacity>
       </View>
 
-      {/* Label Periode Aktif (Scannability) */}
-      {modeFilterWaktu !== 'Semua' && (
+      {/* Label Info Filter Aktif */}
+      {(modeFilterWaktu !== 'Semua' || filterJenis !== 'Semua') && (
         <View style={styles.activeFilterLabel}>
-          <Text style={{ color: isDark ? '#2d9cdb' : '#2d9cdb', fontSize: 12, fontWeight: '700' }}>
-            Periode: {modeFilterWaktu === 'Hari' ? tanggalPilihan.toLocaleDateString('id-ID') : 
-                      modeFilterWaktu === 'Bulan' ? tanggalPilihan.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) : 
-                      tanggalPilihan.getFullYear()}
+          <Text style={{ color: '#2d9cdb', fontSize: 12, fontWeight: '700' }}>
+            Filter: {filterJenis} | {modeFilterWaktu === 'Semua' ? 'Semua Waktu' : 
+                                    modeFilterWaktu === 'Hari' ? tanggalPilihan.toLocaleDateString('id-ID') : 
+                                    modeFilterWaktu === 'Bulan' ? tanggalPilihan.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) : 
+                                    tanggalPilihan.getFullYear()}
           </Text>
-          <TouchableOpacity onPress={() => setModeFilterWaktu('Semua')}>
-            <MaterialCommunityIcons name="close-circle" size={18} color="#e74c3c" style={{ marginLeft: 5 }} />
+          <TouchableOpacity onPress={() => { setModeFilterWaktu('Semua'); setFilterJenis('Semua'); }}>
+            <MaterialCommunityIcons name="close-circle" size={18} color="#e74c3c" style={{ marginLeft: 8 }} />
           </TouchableOpacity>
         </View>
       )}
 
-      {/* ⬅️ MODAL POP-UP FILTER */}
+      {/* ⬅️ MODAL POP-UP GABUNGAN (JENIS + PERIODE) */}
       <Modal
-        animationType="fade"
+        animationType="slide"
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: isDark ? '#1E1E1E' : '#FFF' }]}>
-            <Text style={[styles.modalTitle, { color: isDark ? '#FFF' : '#333' }]}>Filter Periode</Text>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: isDark ? '#FFF' : '#333' }]}>Pengaturan Filter</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <MaterialCommunityIcons name="close" size={24} color={isDark ? '#888' : '#666'} />
+              </TouchableOpacity>
+            </View>
             
-            <Text style={[styles.modalSubTitle, { color: isDark ? '#AAA' : '#666' }]}>Pilih Mode:</Text>
+            {/* Bagian 1: Jenis Transaksi */}
+            <Text style={[styles.modalSubTitle, { color: isDark ? '#AAA' : '#666' }]}>Tipe Transaksi</Text>
+            <View style={styles.modalModeRow}>
+              {(['Semua', 'Pemasukan', 'Pengeluaran'] as const).map((t) => (
+                <TouchableOpacity
+                  key={t}
+                  onPress={() => setFilterJenis(t)}
+                  style={[styles.modeBtn, filterJenis === t && styles.modeBtnActive]}
+                >
+                  <Text style={[styles.modeBtnText, filterJenis === t && { color: '#FFF' }]}>{t}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.separator} />
+
+            {/* Bagian 2: Periode Waktu */}
+            <Text style={[styles.modalSubTitle, { color: isDark ? '#AAA' : '#666' }]}>Rentang Waktu</Text>
             <View style={styles.modalModeRow}>
               {(['Semua', 'Hari', 'Bulan', 'Tahun'] as const).map((m) => (
                 <TouchableOpacity
@@ -270,11 +289,12 @@ const Home: React.FC = () => {
               ))}
             </View>
 
+            {/* Bagian 3: Picker Tanggal (Jika mode bukan 'Semua') */}
             {modeFilterWaktu !== 'Semua' && (
               <>
-                <Text style={[styles.modalSubTitle, { color: isDark ? '#AAA' : '#666', marginTop: 15 }]}>Pilih Waktu:</Text>
+                <Text style={[styles.modalSubTitle, { color: isDark ? '#AAA' : '#666', marginTop: 15 }]}>Pilih Detail Waktu</Text>
                 <TouchableOpacity 
-                  style={styles.dateSelector} 
+                  style={[styles.dateSelector, { backgroundColor: isDark ? '#222' : '#f9f9f9' }]} 
                   onPress={() => setShowPicker(true)}
                 >
                   <MaterialCommunityIcons name="calendar" size={20} color="#2d9cdb" />
@@ -286,10 +306,10 @@ const Home: React.FC = () => {
             )}
 
             <TouchableOpacity 
-              style={styles.closeBtn} 
+              style={styles.applyBtn} 
               onPress={() => setModalVisible(false)}
             >
-              <Text style={styles.closeBtnText}>Terapkan</Text>
+              <Text style={styles.applyBtnText}>Terapkan Filter</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -298,28 +318,6 @@ const Home: React.FC = () => {
       {showPicker && (
         <DateTimePicker value={tanggalPilihan} mode="date" display="default" onChange={handleConfirmDate} />
       )}
-
-      {/* Tambahan Filter Kategori (Chips) */}
-      <View style={styles.filterContainer}>
-        {(['Semua', 'Pemasukan', 'Pengeluaran'] as const).map((tipe) => (
-          <TouchableOpacity
-            key={tipe}
-            onPress={() => setFilterJenis(tipe)}
-            style={[
-              styles.filterChip,
-              filterJenis === tipe && styles.filterChipActive,
-              { backgroundColor: filterJenis === tipe ? '#2d9cdb' : (isDark ? '#1E1E1E' : '#fff') }
-            ]}
-          >
-            <Text style={[
-              styles.filterChipText,
-              { color: filterJenis === tipe ? '#fff' : (isDark ? '#aaa' : '#666') }
-            ]}>
-              {tipe}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
 
       <Text
         style={[
@@ -350,7 +348,7 @@ const Home: React.FC = () => {
                 { color: isDark ? '#AAAAAA' : '#666' },
               ]}
             >
-              Tidak ada transaksi yang cocok.
+              Data tidak ditemukan.
             </Text>
           )}
         </ScrollView>
@@ -412,37 +410,24 @@ const styles = StyleSheet.create({
   filterButton: { marginLeft: 10, padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#ccc', justifyContent: 'center' },
   activeFilterLabel: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, paddingLeft: 5 },
   // Modal Styles
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { width: '85%', padding: 20, borderRadius: 15, elevation: 5 },
-  modalTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15 },
-  modalSubTitle: { fontSize: 14, marginBottom: 8 },
-  modalModeRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  modeBtn: { paddingVertical: 8, paddingHorizontal: 10, borderRadius: 5, borderWidth: 1, borderColor: '#ccc' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
+  modalContent: { width: '90%', padding: 20, borderRadius: 20 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold' },
+  modalSubTitle: { fontSize: 14, fontWeight: '700', marginBottom: 10 },
+  modalModeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  modeBtn: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: '#ddd' },
   modeBtnActive: { backgroundColor: '#2d9cdb', borderColor: '#2d9cdb' },
-  modeBtnText: { fontSize: 12, color: '#666' },
-  dateSelector: { flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#eee' },
-  closeBtn: { marginTop: 20, backgroundColor: '#2d9cdb', padding: 12, borderRadius: 10, alignItems: 'center' },
-  closeBtnText: { color: '#fff', fontWeight: 'bold' },
-  // Filter Chips Styles
-  filterContainer: {
-    flexDirection: 'row',
-    marginBottom: 10,
-  },
-  filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  filterChipActive: {
-    borderColor: '#2d9cdb',
-  },
-  filterChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
+  modeBtnText: { fontSize: 12, color: '#666', fontWeight: '600' },
+  separator: { height: 1, backgroundColor: '#eee', marginVertical: 20 },
+  dateSelector: { flexDirection: 'row', alignItems: 'center', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#eee' },
+  applyBtn: { marginTop: 25, backgroundColor: '#2d9cdb', padding: 15, borderRadius: 12, alignItems: 'center', elevation: 2 },
+  applyBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  // Filter Kategori (Lama/Opsional - Tetap Dipertahankan styles-nya agar kodingan tidak berkurang)
+  filterContainer: { flexDirection: 'row', marginBottom: 10 },
+  filterChip: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20, marginRight: 8, borderWidth: 1, borderColor: '#e0e0e0' },
+  filterChipActive: { borderColor: '#2d9cdb' },
+  filterChipText: { fontSize: 12, fontWeight: '600' },
   judulList: { fontSize: 18, fontWeight: 'bold', marginTop: 10, marginBottom: 5 },
   list: { flex: 1 },
   emptyText: { textAlign: 'center', marginTop: 30 },
