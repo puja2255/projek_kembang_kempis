@@ -120,7 +120,21 @@ export default function EditProfil() {
             marginBottom: 10,
           }}
         />
-        <Button title="Ganti Foto" onPress={pilihFoto} />
+        <Pressable
+        onPress={pilihFoto}
+        style={{
+            paddingHorizontal: 28,
+            paddingVertical: 12,
+            borderRadius: 999,
+            backgroundColor: "#2d9cdb",
+            alignSelf: "center",
+        }}
+        >
+        <Text style={{ color: "#FFF", fontWeight: "600" }}>
+            Pilih Foto
+        </Text>
+        </Pressable>
+
 
         {/* Nama */}
         <TextInput
