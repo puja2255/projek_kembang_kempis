@@ -95,7 +95,7 @@ export default function LogoutPage() {
             paddingHorizontal: 28,
             paddingVertical: 12,
             borderRadius: 999,
-            backgroundColor: "#EF4444",
+            backgroundColor: "#2d9cdb",
             alignSelf: "center",
         }}
         >
