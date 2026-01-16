@@ -8,13 +8,15 @@ export default function DarkModeToggle() {
   return (
     <Pressable
       onPress={toggleTheme}
-      style={{
+      android_ripple={{ color: '#999' }}
+      style={({ pressed }) => ({
         padding: 6,
         borderRadius: 20,
         backgroundColor: isDark ? '#333' : '#EEE',
         alignItems: 'center',
         justifyContent: 'center',
-      }}
+        opacity: pressed ? 0.5 : 1,
+      })}
     >
       <Text style={{ fontSize: 18 }}>
         {isDark ? '🌙' : '☀️'}
