@@ -2,6 +2,7 @@ import React from 'react';
 import { Stack, useRouter } from 'expo-router';
 import { View, Image, Pressable } from 'react-native';
 import { ThemeProvider, useTheme } from '../komponen/ThemeContext';
+import DarkModeToggle from '../komponen/DarkModeToggle';
 
 /* Wrapper agar Stack bisa akses Theme */
 function LayoutWrapper() {
@@ -18,12 +19,20 @@ function LayoutWrapper() {
     >
       <Stack
         screenOptions={{
+          headerTitleAlign: 'center',
           headerStyle: {
             backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
           },
           headerTintColor: isDark ? '#FFFFFF' : '#000000',
 
-          /* Avatar Profil di Header */
+          /* KIRI → Dark Mode Toggle */
+          headerLeft: () => (
+            <View style={{ marginLeft: 12 }}>
+              <DarkModeToggle />
+            </View>
+          ),
+
+          /* KANAN → Avatar Profil */
           headerRight: () => (
             <Pressable
               onPress={() => router.push('/profil')}
@@ -44,9 +53,7 @@ function LayoutWrapper() {
         {/* Home */}
         <Stack.Screen
           name="index"
-          options={{
-            title: 'Kembang Kempis',
-          }}
+          options={{ title: 'Kembang Kempis' }}
         />
 
         {/* Tambah Transaksi */}
@@ -61,25 +68,19 @@ function LayoutWrapper() {
         {/* Laporan */}
         <Stack.Screen
           name="laporan"
-          options={{
-            title: 'Laporan Grafis',
-          }}
+          options={{ title: 'Laporan Grafis' }}
         />
 
         {/* Profil */}
         <Stack.Screen
           name="profil"
-          options={{
-            title: 'Profil',
-          }}
+          options={{ title: 'Profil' }}
         />
 
         {/* Edit Profil */}
         <Stack.Screen
           name="edit-profil"
-          options={{
-            title: 'Edit Profil',
-          }}
+          options={{ title: 'Edit Profil' }}
         />
       </Stack>
     </View>
