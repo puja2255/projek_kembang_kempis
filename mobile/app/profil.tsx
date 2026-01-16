@@ -96,7 +96,7 @@ export default function Profil() {
               style={{
                 textAlign: 'center',
                 marginTop: 6,
-                color: isDark ? '#CCC' : '#555',
+                color: isDark ? '#cccccc' : '#555',
               }}
             >
               {profile.bio}
@@ -147,6 +147,7 @@ function MenuItem({
         style={{
           color: danger ? 'red' : '#000',
           fontWeight: '600',
+          alignSelf: "center",
         }}
       >
         {title}
