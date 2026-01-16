@@ -112,13 +112,10 @@ export default function Profil() {
         <MenuItem
           title="Logout"
           danger
-          onPress={() =>
-            Alert.alert('Logout', 'Yakin ingin logout?', [
-              { text: 'Batal', style: 'cancel' },
-              { text: 'Logout', style: 'destructive' },
-            ])
-          }
+          onPress={() => router.push('/logout')}
         />
+
+        
       </View>
     </>
   );
