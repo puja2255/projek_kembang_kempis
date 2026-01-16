@@ -25,28 +25,26 @@ function LayoutWrapper() {
           },
           headerTintColor: isDark ? '#FFFFFF' : '#000000',
 
-          /* KIRI → Dark Mode Toggle */
-          headerLeft: () => (
-            <View style={{ marginLeft: 12 }}>
-              <DarkModeToggle />
-            </View>
-          ),
-
-          /* KANAN → Avatar Profil */
+          // Gabungkan DarkModeToggle dan Avatar di kanan
           headerRight: () => (
-            <Pressable
-              onPress={() => router.push('/profil')}
-              style={{ marginRight: 12 }}
-            >
-              <Image
-                source={{ uri: 'https://i.pravatar.cc/150' }}
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 16,
-                }}
-              />
-            </Pressable>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 12 }}>
+              {/* Dark Mode Toggle di kiri */}
+              <View style={{ marginRight: 12 }}>
+                <DarkModeToggle />
+              </View>
+
+              {/* Avatar Profil di kanan */}
+              <Pressable onPress={() => router.push('/profil')}>
+                <Image
+                  source={{ uri: 'https://i.pravatar.cc/150' }}
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 16,
+                  }}
+                />
+              </Pressable>
+            </View>
           ),
         }}
       >
