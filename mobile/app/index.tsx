@@ -106,8 +106,6 @@ const Home: React.FC = () => {
         { backgroundColor: isDark ? '#121212' : '#F5F7FB' },
       ]}
     >
-      {/* 🌙 Toggle Dark Mode */}
-      <DarkModeToggle />
 
       <View
         style={[
