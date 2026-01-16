@@ -8,7 +8,7 @@ import {
   RefreshControl,
   Alert,
   TouchableOpacity,
-  TextInput, // ⬅️ tambahkan
+  TextInput,
 } from 'react-native';
 
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -29,7 +29,10 @@ const Home: React.FC = () => {
   const [data, setData] = useState<Transaksi[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>(''); // ⬅️ state search
+  const [searchQuery, setSearchQuery] = useState<string>(''); 
+  
+  // State baru untuk filter jenis
+  const [filterJenis, setFilterJenis] = useState<'Semua' | 'Pemasukan' | 'Pengeluaran'>('Semua');
 
   const ambilData = async () => {
     setLoading(true);
@@ -100,10 +103,12 @@ const Home: React.FC = () => {
 
   const isDark = theme === 'dark';
 
-  // ⬅️ filter data berdasarkan searchQuery
-  const filteredData = data.filter((item) =>
-    (item.deskripsi || '').toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Logika filter (Gabungan search dan kategori jenis)
+  const filteredData = data.filter((item) => {
+    const matchesSearch = (item.deskripsi || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesJenis = filterJenis === 'Semua' || item.jenis === filterJenis;
+    return matchesSearch && matchesJenis;
+  });
 
   return (
     <View
@@ -137,7 +142,7 @@ const Home: React.FC = () => {
         </Text>
       </View>
 
-      {/* Tombol */}
+      {/* Tombol Utama (Tetap Dipertahankan) */}
       <View style={styles.tombolContainer}>
         <TouchableOpacity
           style={styles.primaryButton}
@@ -174,6 +179,7 @@ const Home: React.FC = () => {
           {
             backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
             color: isDark ? '#FFFFFF' : '#000000',
+            borderColor: isDark ? '#333' : '#ccc',
           },
         ]}
         placeholder="Cari transaksi..."
@@ -181,6 +187,28 @@ const Home: React.FC = () => {
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
+
+      {/* Tambahan Filter Kategori (Chips) */}
+      <View style={styles.filterContainer}>
+        {(['Semua', 'Pemasukan', 'Pengeluaran'] as const).map((tipe) => (
+          <TouchableOpacity
+            key={tipe}
+            onPress={() => setFilterJenis(tipe)}
+            style={[
+              styles.filterChip,
+              filterJenis === tipe && styles.filterChipActive,
+              { backgroundColor: filterJenis === tipe ? '#2d9cdb' : (isDark ? '#1E1E1E' : '#fff') }
+            ]}
+          >
+            <Text style={[
+              styles.filterChipText,
+              { color: filterJenis === tipe ? '#fff' : (isDark ? '#aaa' : '#666') }
+            ]}>
+              {tipe}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
       <Text
         style={[
@@ -269,7 +297,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#ccc',
+  },
+  // Filter Chips Styles
+  filterContainer: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  filterChipActive: {
+    borderColor: '#2d9cdb',
+  },
+  filterChipText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   judulList: { fontSize: 18, fontWeight: 'bold', marginTop: 10, marginBottom: 5 },
   list: { flex: 1 },
