@@ -8,27 +8,28 @@ import {
   RefreshControl,
   Alert,
   TouchableOpacity,
+  TextInput, // ⬅️ tambahkan
 } from 'react-native';
 
-import { useFocusEffect, useRouter, Link } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import Kartu from '../komponen/Kartu';
-import DarkModeToggle from '../komponen/DarkModeToggle';
 import { useTheme } from '../komponen/ThemeContext';
 
 import { Transaksi, formatRupiah } from '../komponen/tipe';
 import { on as busOn } from '../komponen/eventBus';
 
-import { API_URL } from '../config'; // Import dari file config
+import { API_URL } from '../config';
 
 const Home: React.FC = () => {
   const router = useRouter();
-  const { theme } = useTheme(); // 🌙 DARK MODE
+  const { theme } = useTheme();
 
   const [data, setData] = useState<Transaksi[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>(''); // ⬅️ state search
 
   const ambilData = async () => {
     setLoading(true);
@@ -99,6 +100,11 @@ const Home: React.FC = () => {
 
   const isDark = theme === 'dark';
 
+  // ⬅️ filter data berdasarkan searchQuery
+  const filteredData = data.filter((item) =>
+    (item.deskripsi || '').toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <View
       style={[
@@ -106,7 +112,7 @@ const Home: React.FC = () => {
         { backgroundColor: isDark ? '#121212' : '#F5F7FB' },
       ]}
     >
-
+      {/* Saldo */}
       <View
         style={[
           styles.balanceCard,
@@ -131,6 +137,7 @@ const Home: React.FC = () => {
         </Text>
       </View>
 
+      {/* Tombol */}
       <View style={styles.tombolContainer}>
         <TouchableOpacity
           style={styles.primaryButton}
@@ -160,6 +167,21 @@ const Home: React.FC = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Search Bar */}
+      <TextInput
+        style={[
+          styles.searchBar,
+          {
+            backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+            color: isDark ? '#FFFFFF' : '#000000',
+          },
+        ]}
+        placeholder="Cari transaksi..."
+        placeholderTextColor={isDark ? '#888' : '#999'}
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
+
       <Text
         style={[
           styles.judulList,
@@ -178,8 +200,8 @@ const Home: React.FC = () => {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
-          {data.length > 0 ? (
-            data.map((item) => (
+          {filteredData.length > 0 ? (
+            filteredData.map((item) => (
               <Kartu key={item.id} transaksi={item} />
             ))
           ) : (
@@ -189,7 +211,7 @@ const Home: React.FC = () => {
                 { color: isDark ? '#AAAAAA' : '#666' },
               ]}
             >
-              Belum ada transaksi.
+              Tidak ada transaksi yang cocok.
             </Text>
           )}
         </ScrollView>
@@ -207,15 +229,7 @@ const Home: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 12,
-  },
-  linkProfil: {
-    marginTop: 8,
-    marginBottom: 4,
-    fontWeight: '600',
-  },
+  container: { flex: 1, padding: 12 },
   balanceCard: {
     padding: 16,
     borderRadius: 12,
@@ -223,14 +237,8 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     elevation: 3,
   },
-  balanceLabel: {
-    fontSize: 14,
-  },
-  balanceValue: {
-    fontSize: 26,
-    fontWeight: '700',
-    marginTop: 6,
-  },
+  balanceLabel: { fontSize: 14 },
+  balanceValue: { fontSize: 26, fontWeight: '700', marginTop: 6 },
   tombolContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -244,10 +252,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center',
   },
-  primaryButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-  },
+  primaryButtonText: { color: '#fff', fontWeight: '700' },
   secondaryButton: {
     flex: 1,
     paddingVertical: 12,
@@ -256,22 +261,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
   },
-  secondaryButtonText: {
-    fontWeight: '700',
+  secondaryButtonText: { fontWeight: '700' },
+  searchBar: {
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
   },
-  judulList: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 10,
-    marginBottom: 5,
-  },
-  list: {
-    flex: 1,
-  },
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 30,
-  },
+  judulList: { fontSize: 18, fontWeight: 'bold', marginTop: 10, marginBottom: 5 },
+  list: { flex: 1 },
+  emptyText: { textAlign: 'center', marginTop: 30 },
   fab: {
     position: 'absolute',
     right: 18,
