@@ -136,3 +136,15 @@ const EditTransaksi = () => {
         {showPicker && (
           <DateTimePicker value={tanggal} mode="date" display="default" onChange={onChangeDate} />
         )}
+
+        <TouchableOpacity 
+          style={[styles.btnSimpan, { opacity: loading ? 0.7 : 1 }]} 
+          onPress={handleUpdate}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.btnSimpanText}>Simpan Perubahan</Text>
+          )}
+        </TouchableOpacity>
