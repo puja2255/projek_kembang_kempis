@@ -168,5 +168,6 @@ const styles = StyleSheet.create({
     tabText: { fontWeight: 'bold' },
     input: { padding: 12, borderRadius: 10, fontSize: 16, borderWidth: 1, borderColor: 'transparent' },
     textArea: { height: 80, textAlignVertical: 'top' },
+    dateInput: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
 
 });
