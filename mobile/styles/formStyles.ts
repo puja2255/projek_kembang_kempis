@@ -58,3 +58,9 @@ export const getFormStyles = (isDark: boolean) => StyleSheet.create({
     borderWidth: 1,
     borderColor: 'transparent',
   },
+
+  activeTabIn: {
+    backgroundColor: '#27ae60',
+    borderColor: '#27ae60',
+    elevation: 3,
+  },
