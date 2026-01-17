@@ -124,6 +124,12 @@ const Laporan: React.FC = () => {
   // 1. Buat Header CSV
     let csvContent = "Bulan/Tanggal,Pemasukan,Pengeluaran\n";
 
+    // 2. Masukkan Data dari filteredLaporan
+    filteredLaporan.forEach(item => {
+      const tgl = new Date(item.bulan).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+      csvContent += `${tgl},${item.pemasukan},${item.pengeluaran}\n`;
+    });
+
   if (loading) return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#2d9cdb" /></View>;
 
   return (
