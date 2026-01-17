@@ -104,3 +104,22 @@ const EditTransaksi = () => {
           placeholder="0"
           placeholderTextColor="#888"
         />
+
+        <Text style={[styles.label, { color: isDark ? '#AAA' : '#666' }]}>Deskripsi Utama</Text>
+        <TextInput
+          style={[styles.input, { backgroundColor: isDark ? '#252525' : '#F9F9F9', color: isDark ? '#FFF' : '#000' }]}
+          value={deskripsi}
+          onChangeText={setDeskripsi}
+          placeholder="Contoh: Makan Siang"
+          placeholderTextColor="#888"
+        />
+
+        <Text style={[styles.label, { color: isDark ? '#AAA' : '#666' }]}>Catatan Tambahan (Opsional)</Text>
+        <TextInput
+          style={[styles.input, styles.textArea, { backgroundColor: isDark ? '#252525' : '#F9F9F9', color: isDark ? '#FFF' : '#000' }]}
+          value={deskripsiTambahan}
+          onChangeText={setDeskripsiTambahan}
+          multiline
+          placeholder="Detail lainnya..."
+          placeholderTextColor="#888"
+        />
