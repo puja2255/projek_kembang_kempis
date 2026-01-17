@@ -167,5 +167,6 @@ const styles = StyleSheet.create({
     tabKeluar: { backgroundColor: '#e74c3c', borderColor: '#e74c3c' },
     tabText: { fontWeight: 'bold' },
     input: { padding: 12, borderRadius: 10, fontSize: 16, borderWidth: 1, borderColor: 'transparent' },
+    textArea: { height: 80, textAlignVertical: 'top' },
 
 });
