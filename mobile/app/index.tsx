@@ -18,7 +18,7 @@ import * as Sharing from 'expo-sharing';
 
 import Kartu from '../komponen/Kartu';
 import FilterModal from '../komponen/FilterModal';
-import FloatingPDFButton from '../komponen/FloatingPDFButton'; // Import komponen reusable
+import FloatingPDFButton from '../komponen/FloatingPDFButton'; 
 import { useTheme } from '../komponen/ThemeContext';
 import { Transaksi, formatRupiah } from '../komponen/tipe';
 import { on as busOn } from '../komponen/eventBus';
@@ -53,6 +53,24 @@ const Home: React.FC = () => {
       setLoading(false);
       setRefreshing(false);
     }
+  };
+
+  const hapusData = async (id: string) => {
+    Alert.alert("Hapus", "Yakin ingin menghapus transaksi ini?", [
+      { text: "Batal", style: "cancel" },
+      {
+        text: "Hapus",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await fetch(`${API_URL}/transaksi/${id}`, { method: 'DELETE' });
+            setData(prev => prev.filter(item => item.id !== id));
+          } catch (e) {
+            Alert.alert("Error", "Gagal menghapus data");
+          }
+        }
+      }
+    ]);
   };
 
   useFocusEffect(
@@ -168,14 +186,27 @@ const Home: React.FC = () => {
           <ActivityIndicator size="large" color="#2d9cdb" style={{ marginTop: 20 }} />
         ) : filteredData.length > 0 ? (
           filteredData.map((item) => (
-            <Kartu key={item.id} transaksi={item} onDelete={() => {}} onEdit={() => {}} />
+            <Kartu 
+              key={item.id} 
+              transaksi={item} 
+              onDelete={() => hapusData(item.id)} 
+              onEdit={() => router.push({ 
+                pathname: '/edit-transaksi', 
+                params: { 
+                  id: item.id,
+                  jumlah: item.jumlah.toString(), // Kirim jumlah sebagai string
+                  jenis: item.jenis,
+                  deskripsi: item.deskripsi,
+                  tanggal: item.tanggal
+                } 
+              })} 
+            />
           ))
         ) : (
           <Text style={[styles.emptyText, { color: isDark ? '#AAAAAA' : '#666' }]}>Data tidak ditemukan.</Text>
         )}
       </ScrollView>
 
-      {/* PAKAI KOMPONEN REUSABLE DISINI */}
       <FloatingPDFButton onPress={exportKePDF} />
     </View>
   );
