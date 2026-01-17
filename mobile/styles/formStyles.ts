@@ -49,3 +49,12 @@ export const getFormStyles = (isDark: boolean) => StyleSheet.create({
     marginBottom: 10,
     backgroundColor: isDark ? '#252525' : '#E0E4E8',
   },
+
+  typeTab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
