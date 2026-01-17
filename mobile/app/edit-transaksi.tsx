@@ -38,3 +38,17 @@ const EditTransaksi = () => {
       Alert.alert('Error', 'Jumlah dan Deskripsi harus diisi!');
       return;
     }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/transaksi/${params.id}`, {
+        method: 'PUT', // Menggunakan PUT untuk update data
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jenis,
+          jumlah: parseInt(jumlah),
+          deskripsi,
+          deskripsiTambahan,
+          tanggal: tanggal.toISOString(),
+        }),
+      });
