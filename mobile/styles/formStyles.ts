@@ -134,3 +134,9 @@ export const getFormStyles = (isDark: boolean) => StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 10,
   },
+
+  btnSimpanText: {
+    color: '#FFF',
+    fontSize: 17,
+    fontWeight: 'bold',
+  },
