@@ -17,6 +17,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from "../komponen/ThemeContext";
 import { API_URL } from '../config';
 import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 const screenWidth = Dimensions.get("window").width;
 
