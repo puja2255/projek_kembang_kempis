@@ -121,6 +121,9 @@ const Laporan: React.FC = () => {
     propsForLabels: { fontSize: 10 },
   };
 
+  // 1. Buat Header CSV
+    let csvContent = "Bulan/Tanggal,Pemasukan,Pengeluaran\n";
+
   if (loading) return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#2d9cdb" /></View>;
 
   return (
