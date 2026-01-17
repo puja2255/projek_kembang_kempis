@@ -16,8 +16,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from "../komponen/ThemeContext";
 import { API_URL } from '../config';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
+
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -45,8 +44,6 @@ const Laporan: React.FC = () => {
   const [showPicker, setShowPicker] = useState(false);
   
   const [viewFilter, setViewFilter] = useState<'all' | 'in' | 'out'>('all');
-
-  
 
   const ambilLaporan = async () => {
     setLoading(true);
