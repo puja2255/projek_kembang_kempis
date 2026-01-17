@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TextInput,
   TouchableOpacity,
   ScrollView,
   Alert,
   ActivityIndicator,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -16,6 +16,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { useTheme } from '../komponen/ThemeContext';
 import { API_URL } from '../config';
+import { getFormStyles } from '../styles/formStyles'; // Import CSS Eksternal
 
 const EditTransaksi: React.FC = () => {
   const router = useRouter();
@@ -23,7 +24,10 @@ const EditTransaksi: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
-  // --- STATE FORM (Inisialisasi dari data yang dikirim Home) ---
+  // Menggunakan style eksternal
+  const styles = getFormStyles(isDark);
+
+  // --- STATE FORM ---
   const [jenis, setJenis] = useState<string>((params.jenis as string) || 'Pengeluaran');
   const [jumlah, setJumlah] = useState<string>((params.jumlah as string) || '');
   const [deskripsi, setDeskripsi] = useState<string>((params.deskripsi as string) || '');
@@ -36,7 +40,6 @@ const EditTransaksi: React.FC = () => {
 
   // --- FUNGSI UPDATE DATA ---
   const handleUpdate = async () => {
-    // Validasi input wajib
     if (!jumlah || !deskripsi) {
       Alert.alert('Peringatan', 'Jumlah dan Deskripsi tidak boleh kosong!');
       return;
@@ -54,23 +57,21 @@ const EditTransaksi: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           jenis,
-          jumlah: parseFloat(jumlah), // Menggunakan parseFloat agar support desimal jika perlu
+          jumlah: parseFloat(jumlah),
           deskripsi,
           tanggal: tanggal.toISOString(),
         }),
       });
-
-      const result = await response.json().catch(() => ({}));
 
       if (response.ok) {
         Alert.alert('Berhasil', 'Transaksi telah diperbarui!', [
           { text: 'OK', onPress: () => router.replace('/') } 
         ]);
       } else {
-        throw new Error(result.error || 'Gagal memperbarui data di server.');
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.error || 'Gagal memperbarui data.');
       }
     } catch (error: any) {
-      console.error('Update Error:', error);
       Alert.alert('Gagal', error.message || 'Terjadi kesalahan koneksi.');
     } finally {
       setLoading(false);
@@ -83,125 +84,108 @@ const EditTransaksi: React.FC = () => {
   };
 
   return (
-    <ScrollView 
-      style={[styles.container, { backgroundColor: isDark ? '#121212' : '#F5F7FB' }]}
-      contentContainerStyle={{ paddingBottom: 40 }}
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
     >
-      <View style={[styles.card, { backgroundColor: isDark ? '#1E1E1E' : '#FFF' }]}>
-        <Text style={[styles.headerTitle, { color: isDark ? '#FFF' : '#333' }]}>Edit Transaksi</Text>
-        
-        {/* Tab Jenis */}
-        <Text style={[styles.label, { color: isDark ? '#AAA' : '#666' }]}>Jenis Transaksi</Text>
-        <View style={styles.tabContainer}>
-          {['Pemasukan', 'Pengeluaran'].map((item) => (
+      <ScrollView 
+        style={{ backgroundColor: isDark ? '#121212' : '#F5F7FA' }}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.card}>
+          <Text style={styles.headerTitle}>Edit Transaksi</Text>
+          
+          {/* Tab Jenis */}
+          <Text style={styles.label}>Jenis Transaksi</Text>
+          <View style={styles.typeContainer}>
             <TouchableOpacity
-              key={item}
-              style={[
-                styles.tab,
-                jenis === item && (item === 'Pemasukan' ? styles.tabMasuk : styles.tabKeluar),
-                { borderColor: isDark ? '#333' : '#DDD' }
-              ]}
-              onPress={() => setJenis(item)}
+              style={[styles.typeTab, jenis === 'Pemasukan' && styles.activeTabIn]}
+              onPress={() => setJenis('Pemasukan')}
             >
-              <Text style={[
-                styles.tabText, 
-                jenis === item ? { color: '#FFF' } : { color: isDark ? '#888' : '#444' }
-              ]}>
-                {item}
+              <Text style={[styles.typeText, { color: jenis === 'Pemasukan' ? '#FFF' : (isDark ? '#AAA' : '#666') }]}>
+                Pemasukan
               </Text>
             </TouchableOpacity>
-          ))}
-        </View>
+            <TouchableOpacity
+              style={[styles.typeTab, jenis === 'Pengeluaran' && styles.activeTabOut]}
+              onPress={() => setJenis('Pengeluaran')}
+            >
+              <Text style={[styles.typeText, { color: jenis === 'Pengeluaran' ? '#FFF' : (isDark ? '#AAA' : '#666') }]}>
+                Pengeluaran
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* Input Jumlah */}
-        <Text style={[styles.label, { color: isDark ? '#AAA' : '#666' }]}>Jumlah (Rp)</Text>
-        <TextInput
-          style={[styles.input, { backgroundColor: isDark ? '#252525' : '#F9F9F9', color: isDark ? '#FFF' : '#000' }]}
-          keyboardType="numeric"
-          value={jumlah}
-          onChangeText={setJumlah}
-          placeholder="0"
-          placeholderTextColor="#888"
-        />
+          {/* Input Jumlah */}
+          <Text style={styles.label}>Jumlah (Rp)</Text>
+          <View style={styles.inputWrapper}>
+            <Text style={styles.currencyPrefix}>Rp</Text>
+            <TextInput
+              style={[styles.input, styles.inputLarge]}
+              keyboardType="numeric"
+              value={jumlah}
+              onChangeText={(text) => setJumlah(text.replace(/[^0-9]/g, ''))}
+              placeholder="0"
+              placeholderTextColor={isDark ? '#444' : '#CCC'}
+            />
+          </View>
 
-        {/* Input Deskripsi */}
-        <Text style={[styles.label, { color: isDark ? '#AAA' : '#666' }]}>Deskripsi</Text>
-        <TextInput
-          style={[styles.input, { backgroundColor: isDark ? '#252525' : '#F9F9F9', color: isDark ? '#FFF' : '#000' }]}
-          value={deskripsi}
-          onChangeText={setDeskripsi}
-          placeholder="Contoh: Makan siang"
-          placeholderTextColor="#888"
-        />
+          {/* Input Deskripsi */}
+          <Text style={styles.label}>Deskripsi</Text>
+          <View style={[styles.inputWrapper, styles.inputArea]}>
+            <TextInput
+              style={styles.input}
+              multiline
+              numberOfLines={4}
+              value={deskripsi}
+              onChangeText={setDeskripsi}
+              placeholder="Contoh: Makan siang"
+              placeholderTextColor={isDark ? '#555' : '#BBB'}
+            />
+          </View>
 
-        {/* Input Tanggal */}
-        <Text style={[styles.label, { color: isDark ? '#AAA' : '#666' }]}>Tanggal</Text>
-        <TouchableOpacity 
-          style={[styles.input, styles.dateInput, { backgroundColor: isDark ? '#252525' : '#F9F9F9' }]} 
-          onPress={() => setShowPicker(true)}
-        >
-          <Text style={{ color: isDark ? '#FFF' : '#000' }}>
-            {tanggal.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </Text>
-          <MaterialCommunityIcons name="calendar" size={20} color="#2d9cdb" />
-        </TouchableOpacity>
+          {/* Input Tanggal */}
+          <Text style={styles.label}>Tanggal</Text>
+          <TouchableOpacity 
+            style={styles.datePickerBtn} 
+            onPress={() => setShowPicker(true)}
+          >
+            <Text style={{ color: isDark ? '#FFF' : '#000' }}>
+              {tanggal.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </Text>
+            <MaterialCommunityIcons name="calendar" size={20} color="#2d9cdb" />
+          </TouchableOpacity>
 
-        {showPicker && (
-          <DateTimePicker 
-            value={tanggal} 
-            mode="date" 
-            display="default" 
-            onChange={onChangeDate} 
-          />
-        )}
-
-        {/* Tombol Simpan */}
-        <TouchableOpacity 
-          style={[styles.btnSimpan, { opacity: loading ? 0.7 : 1 }]} 
-          onPress={handleUpdate}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#FFF" />
-          ) : (
-            <Text style={styles.btnSimpanText}>Simpan Perubahan</Text>
+          {showPicker && (
+            <DateTimePicker 
+              value={tanggal} 
+              mode="date" 
+              display="default" 
+              onChange={onChangeDate} 
+            />
           )}
-        </TouchableOpacity>
 
-        {/* Tombol Kembali */}
-        <TouchableOpacity style={styles.btnBatal} onPress={() => router.back()}>
-          <Text style={[styles.btnBatalText, { color: isDark ? '#AAA' : '#888' }]}>Batal</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          {/* Tombol Simpan */}
+          <TouchableOpacity 
+            style={[styles.btnSimpan, { opacity: loading ? 0.7 : 1 }]} 
+            onPress={handleUpdate}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFF" />
+            ) : (
+              <Text style={styles.btnSimpanText}>Simpan Perubahan</Text>
+            )}
+          </TouchableOpacity>
+
+          {/* Tombol Kembali */}
+          <TouchableOpacity style={styles.btnBatal} onPress={() => router.back()}>
+            <Text style={styles.btnBatalText}>Batal</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  card: { 
-    margin: 16, 
-    padding: 24, 
-    borderRadius: 20, 
-    elevation: 4, 
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1, 
-    shadowRadius: 8 
-  },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
-  label: { fontSize: 13, fontWeight: '700', marginBottom: 8, marginTop: 16, textTransform: 'uppercase' },
-  tabContainer: { flexDirection: 'row', gap: 10, marginBottom: 4 },
-  tab: { flex: 1, paddingVertical: 12, alignItems: 'center', borderRadius: 12, borderWidth: 1 },
-  tabMasuk: { backgroundColor: '#27ae60', borderColor: '#27ae60' },
-  tabKeluar: { backgroundColor: '#e74c3c', borderColor: '#e74c3c' },
-  tabText: { fontWeight: 'bold', fontSize: 14 },
-  input: { padding: 14, borderRadius: 12, fontSize: 16, borderWidth: 1, borderColor: 'transparent' },
-  dateInput: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  btnSimpan: { backgroundColor: '#2d9cdb', padding: 16, borderRadius: 14, alignItems: 'center', marginTop: 32 },
-  btnSimpanText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
-  btnBatal: { marginTop: 16, alignItems: 'center', padding: 10 },
-  btnBatalText: { fontSize: 14, fontWeight: '600' },
-});
 
 export default EditTransaksi;
