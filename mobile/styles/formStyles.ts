@@ -70,3 +70,8 @@ export const getFormStyles = (isDark: boolean) => StyleSheet.create({
     borderColor: '#e74c3c',
     elevation: 3,
   },
+
+  typeText: {
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
