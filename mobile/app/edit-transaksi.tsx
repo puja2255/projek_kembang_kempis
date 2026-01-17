@@ -170,5 +170,6 @@ const styles = StyleSheet.create({
     textArea: { height: 80, textAlignVertical: 'top' },
     dateInput: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     btnSimpan: { backgroundColor: '#2d9cdb', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 30 },
+    btnSimpanText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
 
 });
