@@ -52,3 +52,18 @@ const EditTransaksi = () => {
           tanggal: tanggal.toISOString(),
         }),
       });
+
+      if (response.ok) {
+        Alert.alert('Berhasil', 'Transaksi telah diperbarui', [
+          { text: 'OK', onPress: () => router.back() }
+        ]);
+      } else {
+        throw new Error('Gagal memperbarui data');
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Gagal', 'Terjadi kesalahan saat menghubungi server.');
+    } finally {
+      setLoading(false);
+    }
+  };
