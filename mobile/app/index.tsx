@@ -62,7 +62,22 @@ const Home: React.FC = () => {
     }
   };
 
-  // --- ⬅️ FITUR BARU: FUNGSI HAPUS TRANSAKSI ---
+  // --- FITUR EDIT: Navigasi ke inputan dengan membawa data ---
+  const editTransaksi = (item: Transaksi) => {
+    router.push({
+      pathname: '/inputan',
+      params: { 
+        id: item.id,
+        jenis: item.jenis,
+        jumlah: item.jumlah.toString(),
+        deskripsi: item.deskripsi,
+        tanggal: item.tanggal,
+        deskripsiTambahan: item.deskripsiTambahan || ''
+      }
+    });
+  };
+
+  // --- FITUR HAPUS: Menghapus data dari server dan state lokal ---
   const hapusTransaksi = (id: string) => {
     Alert.alert(
       'Hapus Transaksi',
@@ -77,18 +92,14 @@ const Home: React.FC = () => {
               const response = await fetch(`${API_URL}/transaksi/${id}`, {
                 method: 'DELETE',
               });
-
               if (response.ok) {
-                // Update state lokal agar data langsung hilang dari layar
-                setData((prevData) => prevData.filter((item) => item.id !== id));
-                // Opsional: Alert.alert('Berhasil', 'Transaksi telah dihapus');
+                setData((prev) => prev.filter((item) => item.id !== id));
               } else {
-                throw new Error('Gagal menghapus di server');
+                throw new Error('Gagal hapus');
               }
             } catch (error) {
-              // Jika gagal koneksi ke API, kita tetap hapus di lokal (untuk MOCK_DATA)
-              setData((prevData) => prevData.filter((item) => item.id !== id));
-              console.log('Dihapus dari tampilan lokal (Mock Mode)');
+              // Tetap hapus di lokal jika gagal koneksi (untuk Mock Data)
+              setData((prev) => prev.filter((item) => item.id !== id));
             }
           },
         },
@@ -196,7 +207,10 @@ const Home: React.FC = () => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.secondaryButton, { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF', borderColor: isDark ? '#333' : '#e6e9ee' }]}
+          style={[
+            styles.secondaryButton,
+            { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF', borderColor: isDark ? '#333' : '#e6e9ee' },
+          ]}
           onPress={() => router.push('/laporan')}
         >
           <Text style={[styles.secondaryButtonText, { color: isDark ? '#FFFFFF' : '#333' }]}>Lihat Laporan</Text>
@@ -206,7 +220,15 @@ const Home: React.FC = () => {
       {/* Search Bar Row */}
       <View style={styles.searchRow}>
         <TextInput
-          style={[styles.searchBar, { flex: 1, backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF', color: isDark ? '#FFFFFF' : '#000000', borderColor: isDark ? '#333' : '#ccc' }]}
+          style={[
+            styles.searchBar,
+            {
+              flex: 1,
+              backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
+              color: isDark ? '#FFFFFF' : '#000000',
+              borderColor: isDark ? '#333' : '#ccc',
+            },
+          ]}
           placeholder="Cari transaksi..."
           placeholderTextColor={isDark ? '#888' : '#999'}
           value={searchQuery}
@@ -258,7 +280,11 @@ const Home: React.FC = () => {
             <Text style={[styles.modalSubTitle, { color: isDark ? '#AAA' : '#666' }]}>Tipe Transaksi</Text>
             <View style={styles.modalModeRow}>
               {(['Semua', 'Pemasukan', 'Pengeluaran'] as const).map((t) => (
-                <TouchableOpacity key={t} onPress={() => setFilterJenis(t)} style={[styles.modeBtn, filterJenis === t && styles.modeBtnActive]}>
+                <TouchableOpacity
+                  key={t}
+                  onPress={() => setFilterJenis(t)}
+                  style={[styles.modeBtn, filterJenis === t && styles.modeBtnActive]}
+                >
                   <Text style={[styles.modeBtnText, filterJenis === t && { color: '#FFF' }]}>{t}</Text>
                 </TouchableOpacity>
               ))}
@@ -269,7 +295,11 @@ const Home: React.FC = () => {
             <Text style={[styles.modalSubTitle, { color: isDark ? '#AAA' : '#666' }]}>Rentang Waktu</Text>
             <View style={styles.modalModeRow}>
               {(['Semua', 'Hari', 'Bulan', 'Tahun'] as const).map((m) => (
-                <TouchableOpacity key={m} onPress={() => setModeFilterWaktu(m)} style={[styles.modeBtn, modeFilterWaktu === m && styles.modeBtnActive]}>
+                <TouchableOpacity
+                  key={m}
+                  onPress={() => setModeFilterWaktu(m)}
+                  style={[styles.modeBtn, modeFilterWaktu === m && styles.modeBtnActive]}
+                >
                   <Text style={[styles.modeBtnText, modeFilterWaktu === m && { color: '#FFF' }]}>{m}</Text>
                 </TouchableOpacity>
               ))}
@@ -278,7 +308,10 @@ const Home: React.FC = () => {
             {modeFilterWaktu !== 'Semua' && (
               <>
                 <Text style={[styles.modalSubTitle, { color: isDark ? '#AAA' : '#666', marginTop: 15 }]}>Pilih Detail Waktu</Text>
-                <TouchableOpacity style={[styles.dateSelector, { backgroundColor: isDark ? '#222' : '#f9f9f9' }]} onPress={() => setShowPicker(true)}>
+                <TouchableOpacity 
+                  style={[styles.dateSelector, { backgroundColor: isDark ? '#222' : '#f9f9f9' }]} 
+                  onPress={() => setShowPicker(true)}
+                >
                   <MaterialCommunityIcons name="calendar" size={20} color="#2d9cdb" />
                   <Text style={{ marginLeft: 10, color: isDark ? '#FFF' : '#333' }}>
                     {tanggalPilihan.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -303,13 +336,17 @@ const Home: React.FC = () => {
       {loading && !refreshing ? (
         <ActivityIndicator size="large" color="#2d9cdb" />
       ) : (
-        <ScrollView style={styles.list} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
+        <ScrollView
+          style={styles.list}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
           {filteredData.length > 0 ? (
             filteredData.map((item) => (
               <Kartu 
                 key={item.id} 
                 transaksi={item} 
-                onDelete={() => hapusTransaksi(item.id)} // ⬅️ Teruskan fungsi hapus
+                onDelete={() => hapusTransaksi(item.id)}
+                onEdit={() => editTransaksi(item)}
               />
             ))
           ) : (
