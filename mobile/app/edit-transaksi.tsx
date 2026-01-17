@@ -67,3 +67,30 @@ const EditTransaksi = () => {
       setLoading(false);
     }
   };
+
+  const onChangeDate = (event: any, selectedDate?: Date) => {
+    setShowPicker(Platform.OS === 'ios');
+    if (selectedDate) setTanggal(selectedDate);
+  };
+
+  return (
+    <ScrollView style={[styles.container, { backgroundColor: isDark ? '#121212' : '#F5F7FB' }]}>
+      <View style={[styles.card, { backgroundColor: isDark ? '#1E1E1E' : '#FFF' }]}>
+        <Text style={[styles.label, { color: isDark ? '#AAA' : '#666' }]}>Jenis Transaksi</Text>
+        <View style={styles.tabContainer}>
+          {['Pemasukan', 'Pengeluaran'].map((item) => (
+            <TouchableOpacity
+              key={item}
+              style={[
+                styles.tab,
+                jenis === item && (item === 'Pemasukan' ? styles.tabMasuk : styles.tabKeluar),
+                { borderColor: isDark ? '#333' : '#DDD' }
+              ]}
+              onPress={() => setJenis(item)}
+            >
+              <Text style={[styles.tabText, jenis === item && { color: '#FFF' }, { color: isDark && jenis !== item ? '#888' : '#444' }]}>
+                {item}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
