@@ -77,7 +77,7 @@ function LayoutWrapper() {
 
         {/* Edit Profil */}
         <Stack.Screen
-          name="edit-profil"
+          name="edit-profile"
           options={{ title: 'Edit Profil' }}
         />
       </Stack>
