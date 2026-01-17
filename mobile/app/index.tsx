@@ -34,7 +34,6 @@ const Home: React.FC = () => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>(''); 
   
-  // --- ⬅️ SEMUA STATE FILTER DISATUKAN ---
   const [modalVisible, setModalVisible] = useState(false);
   const [filterJenis, setFilterJenis] = useState<'Semua' | 'Pemasukan' | 'Pengeluaran'>('Semua');
   const [modeFilterWaktu, setModeFilterWaktu] = useState<'Semua' | 'Hari' | 'Bulan' | 'Tahun'>('Semua');
@@ -61,6 +60,40 @@ const Home: React.FC = () => {
       setLoading(false);
       setRefreshing(false);
     }
+  };
+
+  // --- ⬅️ FITUR BARU: FUNGSI HAPUS TRANSAKSI ---
+  const hapusTransaksi = (id: string) => {
+    Alert.alert(
+      'Hapus Transaksi',
+      'Apakah Anda yakin ingin menghapus transaksi ini?',
+      [
+        { text: 'Batal', style: 'cancel' },
+        {
+          text: 'Hapus',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const response = await fetch(`${API_URL}/transaksi/${id}`, {
+                method: 'DELETE',
+              });
+
+              if (response.ok) {
+                // Update state lokal agar data langsung hilang dari layar
+                setData((prevData) => prevData.filter((item) => item.id !== id));
+                // Opsional: Alert.alert('Berhasil', 'Transaksi telah dihapus');
+              } else {
+                throw new Error('Gagal menghapus di server');
+              }
+            } catch (error) {
+              // Jika gagal koneksi ke API, kita tetap hapus di lokal (untuk MOCK_DATA)
+              setData((prevData) => prevData.filter((item) => item.id !== id));
+              console.log('Dihapus dari tampilan lokal (Mock Mode)');
+            }
+          },
+        },
+      ]
+    );
   };
 
   useFocusEffect(
@@ -117,7 +150,6 @@ const Home: React.FC = () => {
     }
   };
 
-  // --- ⬅️ LOGIKA FILTER GABUNGAN (SEARCH + JENIS + WAKTU) ---
   const filteredData = data.filter((item) => {
     const matchesSearch = (item.deskripsi || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesJenis = filterJenis === 'Semua' || item.jenis === filterJenis;
@@ -151,66 +183,30 @@ const Home: React.FC = () => {
           { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF' },
         ]}
       >
-        <Text
-          style={[
-            styles.balanceLabel,
-            { color: isDark ? '#AAAAAA' : '#777' },
-          ]}
-        >
-          Saldo Saat Ini
-        </Text>
-        <Text
-          style={[
-            styles.balanceValue,
-            { color: saldo >= 0 ? '#27ae60' : '#e74c3c' },
-          ]}
-        >
+        <Text style={[styles.balanceLabel, { color: isDark ? '#AAAAAA' : '#777' }]}>Saldo Saat Ini</Text>
+        <Text style={[styles.balanceValue, { color: saldo >= 0 ? '#27ae60' : '#e74c3c' }]}>
           Rp {formatRupiah(saldo)}
         </Text>
       </View>
 
       {/* Tombol Utama */}
       <View style={styles.tombolContainer}>
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={() => router.push('/inputan')}
-        >
+        <TouchableOpacity style={styles.primaryButton} onPress={() => router.push('/inputan')}>
           <Text style={styles.primaryButtonText}>Tambah Transaksi</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[
-            styles.secondaryButton,
-            {
-              backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
-              borderColor: isDark ? '#333' : '#e6e9ee',
-            },
-          ]}
+          style={[styles.secondaryButton, { backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF', borderColor: isDark ? '#333' : '#e6e9ee' }]}
           onPress={() => router.push('/laporan')}
         >
-          <Text
-            style={[
-              styles.secondaryButtonText,
-              { color: isDark ? '#FFFFFF' : '#333' },
-            ]}
-          >
-            Lihat Laporan
-          </Text>
+          <Text style={[styles.secondaryButtonText, { color: isDark ? '#FFFFFF' : '#333' }]}>Lihat Laporan</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Search Bar Row (Satu-satunya input di layar utama) */}
+      {/* Search Bar Row */}
       <View style={styles.searchRow}>
         <TextInput
-          style={[
-            styles.searchBar,
-            {
-              flex: 1,
-              backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF',
-              color: isDark ? '#FFFFFF' : '#000000',
-              borderColor: isDark ? '#333' : '#ccc',
-            },
-          ]}
+          style={[styles.searchBar, { flex: 1, backgroundColor: isDark ? '#1E1E1E' : '#FFFFFF', color: isDark ? '#FFFFFF' : '#000000', borderColor: isDark ? '#333' : '#ccc' }]}
           placeholder="Cari transaksi..."
           placeholderTextColor={isDark ? '#888' : '#999'}
           value={searchQuery}
@@ -243,7 +239,7 @@ const Home: React.FC = () => {
         </View>
       )}
 
-      {/* ⬅️ MODAL POP-UP GABUNGAN (JENIS + PERIODE) */}
+      {/* MODAL POP-UP GABUNGAN */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -259,15 +255,10 @@ const Home: React.FC = () => {
               </TouchableOpacity>
             </View>
             
-            {/* Bagian 1: Jenis Transaksi */}
             <Text style={[styles.modalSubTitle, { color: isDark ? '#AAA' : '#666' }]}>Tipe Transaksi</Text>
             <View style={styles.modalModeRow}>
               {(['Semua', 'Pemasukan', 'Pengeluaran'] as const).map((t) => (
-                <TouchableOpacity
-                  key={t}
-                  onPress={() => setFilterJenis(t)}
-                  style={[styles.modeBtn, filterJenis === t && styles.modeBtnActive]}
-                >
+                <TouchableOpacity key={t} onPress={() => setFilterJenis(t)} style={[styles.modeBtn, filterJenis === t && styles.modeBtnActive]}>
                   <Text style={[styles.modeBtnText, filterJenis === t && { color: '#FFF' }]}>{t}</Text>
                 </TouchableOpacity>
               ))}
@@ -275,28 +266,19 @@ const Home: React.FC = () => {
 
             <View style={styles.separator} />
 
-            {/* Bagian 2: Periode Waktu */}
             <Text style={[styles.modalSubTitle, { color: isDark ? '#AAA' : '#666' }]}>Rentang Waktu</Text>
             <View style={styles.modalModeRow}>
               {(['Semua', 'Hari', 'Bulan', 'Tahun'] as const).map((m) => (
-                <TouchableOpacity
-                  key={m}
-                  onPress={() => setModeFilterWaktu(m)}
-                  style={[styles.modeBtn, modeFilterWaktu === m && styles.modeBtnActive]}
-                >
+                <TouchableOpacity key={m} onPress={() => setModeFilterWaktu(m)} style={[styles.modeBtn, modeFilterWaktu === m && styles.modeBtnActive]}>
                   <Text style={[styles.modeBtnText, modeFilterWaktu === m && { color: '#FFF' }]}>{m}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            {/* Bagian 3: Picker Tanggal (Jika mode bukan 'Semua') */}
             {modeFilterWaktu !== 'Semua' && (
               <>
                 <Text style={[styles.modalSubTitle, { color: isDark ? '#AAA' : '#666', marginTop: 15 }]}>Pilih Detail Waktu</Text>
-                <TouchableOpacity 
-                  style={[styles.dateSelector, { backgroundColor: isDark ? '#222' : '#f9f9f9' }]} 
-                  onPress={() => setShowPicker(true)}
-                >
+                <TouchableOpacity style={[styles.dateSelector, { backgroundColor: isDark ? '#222' : '#f9f9f9' }]} onPress={() => setShowPicker(true)}>
                   <MaterialCommunityIcons name="calendar" size={20} color="#2d9cdb" />
                   <Text style={{ marginLeft: 10, color: isDark ? '#FFF' : '#333' }}>
                     {tanggalPilihan.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -305,10 +287,7 @@ const Home: React.FC = () => {
               </>
             )}
 
-            <TouchableOpacity 
-              style={styles.applyBtn} 
-              onPress={() => setModalVisible(false)}
-            >
+            <TouchableOpacity style={styles.applyBtn} onPress={() => setModalVisible(false)}>
               <Text style={styles.applyBtnText}>Terapkan Filter</Text>
             </TouchableOpacity>
           </View>
@@ -319,46 +298,28 @@ const Home: React.FC = () => {
         <DateTimePicker value={tanggalPilihan} mode="date" display="default" onChange={handleConfirmDate} />
       )}
 
-      <Text
-        style={[
-          styles.judulList,
-          { color: isDark ? '#FFFFFF' : '#000000' },
-        ]}
-      >
-        Daftar Transaksi
-      </Text>
+      <Text style={[styles.judulList, { color: isDark ? '#FFFFFF' : '#000000' }]}>Daftar Transaksi</Text>
 
       {loading && !refreshing ? (
         <ActivityIndicator size="large" color="#2d9cdb" />
       ) : (
-        <ScrollView
-          style={styles.list}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
+        <ScrollView style={styles.list} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
           {filteredData.length > 0 ? (
             filteredData.map((item) => (
-              <Kartu key={item.id} transaksi={item} />
+              <Kartu 
+                key={item.id} 
+                transaksi={item} 
+                onDelete={() => hapusTransaksi(item.id)} // ⬅️ Teruskan fungsi hapus
+              />
             ))
           ) : (
-            <Text
-              style={[
-                styles.emptyText,
-                { color: isDark ? '#AAAAAA' : '#666' },
-              ]}
-            >
-              Data tidak ditemukan.
-            </Text>
+            <Text style={[styles.emptyText, { color: isDark ? '#AAAAAA' : '#666' }]}>Data tidak ditemukan.</Text>
           )}
         </ScrollView>
       )}
 
       {/* FAB */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => router.push('/inputan')}
-      >
+      <TouchableOpacity style={styles.fab} onPress={() => router.push('/inputan')}>
         <MaterialCommunityIcons name="plus" size={28} color="#fff" />
       </TouchableOpacity>
     </View>
@@ -367,49 +328,18 @@ const Home: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 12 },
-  balanceCard: {
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    marginVertical: 10,
-    elevation: 3,
-  },
+  balanceCard: { padding: 16, borderRadius: 12, alignItems: 'center', marginVertical: 10, elevation: 3 },
   balanceLabel: { fontSize: 14 },
   balanceValue: { fontSize: 26, fontWeight: '700', marginTop: 6 },
-  tombolContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 12,
-  },
-  primaryButton: {
-    flex: 1,
-    backgroundColor: '#2d9cdb',
-    paddingVertical: 12,
-    marginRight: 8,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
+  tombolContainer: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 12 },
+  primaryButton: { flex: 1, backgroundColor: '#2d9cdb', paddingVertical: 12, marginRight: 8, borderRadius: 10, alignItems: 'center' },
   primaryButtonText: { color: '#fff', fontWeight: '700' },
-  secondaryButton: {
-    flex: 1,
-    paddingVertical: 12,
-    marginLeft: 8,
-    borderRadius: 10,
-    alignItems: 'center',
-    borderWidth: 1,
-  },
+  secondaryButton: { flex: 1, paddingVertical: 12, marginLeft: 8, borderRadius: 10, alignItems: 'center', borderWidth: 1 },
   secondaryButtonText: { fontWeight: '700' },
   searchRow: { flexDirection: 'row', marginBottom: 10 },
-  searchBar: {
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    borderWidth: 1,
-  },
+  searchBar: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, borderWidth: 1 },
   filterButton: { marginLeft: 10, padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#ccc', justifyContent: 'center' },
   activeFilterLabel: { flexDirection: 'row', alignItems: 'center', marginBottom: 10, paddingLeft: 5 },
-  // Modal Styles
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
   modalContent: { width: '90%', padding: 20, borderRadius: 20 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
@@ -423,26 +353,10 @@ const styles = StyleSheet.create({
   dateSelector: { flexDirection: 'row', alignItems: 'center', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#eee' },
   applyBtn: { marginTop: 25, backgroundColor: '#2d9cdb', padding: 15, borderRadius: 12, alignItems: 'center', elevation: 2 },
   applyBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
-  // Filter Kategori (Lama/Opsional - Tetap Dipertahankan styles-nya agar kodingan tidak berkurang)
-  filterContainer: { flexDirection: 'row', marginBottom: 10 },
-  filterChip: { paddingHorizontal: 16, paddingVertical: 6, borderRadius: 20, marginRight: 8, borderWidth: 1, borderColor: '#e0e0e0' },
-  filterChipActive: { borderColor: '#2d9cdb' },
-  filterChipText: { fontSize: 12, fontWeight: '600' },
   judulList: { fontSize: 18, fontWeight: 'bold', marginTop: 10, marginBottom: 5 },
   list: { flex: 1 },
   emptyText: { textAlign: 'center', marginTop: 30 },
-  fab: {
-    position: 'absolute',
-    right: 18,
-    bottom: 24,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#2d9cdb',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 6,
-  },
+  fab: { position: 'absolute', right: 18, bottom: 24, width: 60, height: 60, borderRadius: 30, backgroundColor: '#2d9cdb', alignItems: 'center', justifyContent: 'center', elevation: 6 },
 });
 
 export default Home;
