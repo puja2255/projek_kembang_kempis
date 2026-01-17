@@ -93,3 +93,10 @@ export const getFormStyles = (isDark: boolean) => StyleSheet.create({
     marginRight: 10,
     color: '#27ae60',
   },
+
+  input: {
+    flex: 1,
+    padding: 14,
+    fontSize: 16,
+    color: isDark ? '#FFF' : '#000',
+  },
