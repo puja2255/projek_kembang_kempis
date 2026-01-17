@@ -105,3 +105,8 @@ export const getFormStyles = (isDark: boolean) => StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
   },
+
+  inputArea: {
+    textAlignVertical: 'top',
+    height: 100,
+  },
