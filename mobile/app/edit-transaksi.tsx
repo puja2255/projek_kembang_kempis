@@ -148,3 +148,11 @@ const EditTransaksi = () => {
             <Text style={styles.btnSimpanText}>Simpan Perubahan</Text>
           )}
         </TouchableOpacity>
+
+        <TouchableOpacity style={styles.btnBatal} onPress={() => router.back()}>
+          <Text style={[styles.btnBatalText, { color: isDark ? '#AAA' : '#888' }]}>Batal</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  );
+};
