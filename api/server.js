@@ -23,7 +23,6 @@ app.post('/transaksi', async (req, res) => {
         jenis,
         jumlah: parseFloat(jumlah),
         deskripsi,
-        deskripsiTambahan: deskripsiTambahan || '', // Tambahkan ini
         tanggal: tanggal ? new Date(tanggal) : undefined,
       },
     });
