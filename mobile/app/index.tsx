@@ -13,6 +13,8 @@ import {
 
 import { useFocusEffect, useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 
 import Kartu from '../komponen/Kartu';
 import FilterModal from '../komponen/FilterModal';
@@ -93,6 +95,52 @@ const Home: React.FC = () => {
     return matchesSearch && matchesJenis && matchesWaktu;
   });
 
+  // Fungsi Export PDF
+  const exportKePDF = async () => {
+    if (filteredData.length === 0) {
+      Alert.alert("Info", "Tidak ada data untuk diekspor.");
+      return;
+    }
+
+    const rows = filteredData.map((item, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${item.deskripsi}</td>
+        <td>${new Date(item.tanggal).toLocaleDateString('id-ID')}</td>
+        <td style="color: ${item.jenis === 'Pemasukan' ? 'green' : 'red'}">
+          ${item.jenis === 'Pemasukan' ? '' : '-'}Rp ${formatRupiah(item.jumlah)}
+        </td>
+      </tr>
+    `).join('');
+
+    const html = `
+      <html>
+        <body style="font-family: sans-serif; padding: 20px;">
+          <h1 style="text-align: center;">Laporan Transaksi</h1>
+          <p>Periode: ${modeFilterWaktu} (${modeFilterWaktu === 'Semua' ? 'Semua Waktu' : tanggalPilihan.toLocaleDateString('id-ID')})</p>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background-color: #2d9cdb; color: white;">
+                <th style="border: 1px solid #ddd; padding: 8px;">No</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Deskripsi</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Tanggal</th>
+                <th style="border: 1px solid #ddd; padding: 8px;">Jumlah</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
+    try {
+      const { uri } = await Print.printToFileAsync({ html });
+      await Sharing.shareAsync(uri);
+    } catch (error) {
+      Alert.alert("Error", "Gagal membuat PDF.");
+    }
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: isDark ? '#121212' : '#F5F7FB' }]}>
       
@@ -168,8 +216,9 @@ const Home: React.FC = () => {
         )}
       </ScrollView>
 
-      <TouchableOpacity style={styles.fab} onPress={() => router.push('/inputan')}>
-        <MaterialCommunityIcons name="plus" size={28} color="#fff" />
+      {/* FAB: DIUBAH MENJADI EXPORT PDF */}
+      <TouchableOpacity style={[styles.fab, { backgroundColor: '#e74c3c' }]} onPress={exportKePDF}>
+        <MaterialCommunityIcons name="file-pdf-box" size={28} color="#fff" />
       </TouchableOpacity>
     </View>
   );
@@ -191,7 +240,7 @@ const styles = StyleSheet.create({
   judulList: { fontSize: 18, fontWeight: 'bold', marginTop: 10, marginBottom: 5 },
   list: { flex: 1 },
   emptyText: { textAlign: 'center', marginTop: 30 },
-  fab: { position: 'absolute', right: 18, bottom: 24, width: 60, height: 60, borderRadius: 30, backgroundColor: '#2d9cdb', alignItems: 'center', justifyContent: 'center', elevation: 6 },
+  fab: { position: 'absolute', right: 18, bottom: 24, width: 60, height: 60, borderRadius: 30, alignItems: 'center', justifyContent: 'center', elevation: 6 },
 });
 
 export default Home;
