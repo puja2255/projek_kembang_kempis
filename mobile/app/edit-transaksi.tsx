@@ -163,5 +163,6 @@ const styles = StyleSheet.create({
     label: { fontSize: 14, fontWeight: '600', marginBottom: 8, marginTop: 15 },
     tabContainer: { flexDirection: 'row', gap: 10, marginBottom: 5 },
     tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, borderWidth: 1 },
+    tabMasuk: { backgroundColor: '#27ae60', borderColor: '#27ae60' },
 
 });
