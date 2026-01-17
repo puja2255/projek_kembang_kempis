@@ -156,3 +156,6 @@ const EditTransaksi = () => {
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+    });
