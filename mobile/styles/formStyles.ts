@@ -75,3 +75,14 @@ export const getFormStyles = (isDark: boolean) => StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
   },
+
+  // Input Fields
+  inputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 15,
+    paddingHorizontal: 15,
+    backgroundColor: isDark ? '#252525' : '#F9F9F9',
+    borderColor: isDark ? '#333' : '#DDD',
+  },
