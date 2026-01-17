@@ -172,5 +172,8 @@ const styles = StyleSheet.create({
     btnSimpan: { backgroundColor: '#2d9cdb', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 30 },
     btnSimpanText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
     btnBatal: { marginTop: 15, alignItems: 'center', paddingBottom: 20 },
+    btnBatalText: { fontSize: 14, fontWeight: '600' },
 
 });
+
+export default EditTransaksi;
