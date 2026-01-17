@@ -110,3 +110,14 @@ export const getFormStyles = (isDark: boolean) => StyleSheet.create({
     textAlignVertical: 'top',
     height: 100,
   },
+
+  datePickerBtn: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 15,
+    padding: 15,
+    backgroundColor: isDark ? '#252525' : '#F9F9F9',
+    borderColor: isDark ? '#333' : '#DDD',
+  },
