@@ -19,3 +19,11 @@ export const getFormStyles = (isDark: boolean) => StyleSheet.create({
     shadowRadius: 8,
     backgroundColor: isDark ? '#1E1E1E' : '#FFF',
   },
+
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    marginBottom: 25,
+    textAlign: 'center',
+    color: isDark ? '#FFF' : '#333',
+  },
