@@ -16,7 +16,7 @@ import * as Sharing from 'expo-sharing';
 
 import { useTheme } from "../komponen/ThemeContext";
 import FilterModal from "../komponen/FilterModal"; 
-import FloatingPDFButton from "../komponen/FloatingPDFButton"; // Import Komponen Baru
+import FloatingPDFButton from "../komponen/FloatingPDFButton"; 
 import { API_URL } from '../config';
 
 const screenWidth = Dimensions.get("window").width;
@@ -94,7 +94,6 @@ const Laporan: React.FC = () => {
 
     const html = `<html><body style="font-family:sans-serif; padding:20px;">
       <h2 style="text-align:center;">Laporan Transaksi</h2>
-      <p>Periode: ${modeFilterWaktu}</p>
       <table style="width:100%; border-collapse:collapse;">
         <thead>
           <tr style="background:#2d9cdb; color:white;">
@@ -121,7 +120,10 @@ const Laporan: React.FC = () => {
   };
 
   const skalaData = (data: number[]) => data.map(v => v >= 1000000 ? v / 1000000 : v / 1000);
-  const labelUnit = (data: number[]) => (data.reduce((a,b) => a+b, 0) / (data.length || 1)) >= 1000000 ? "(Juta)" : "(rb)";
+  const labelUnit = (data: number[]) => {
+    const avg = data.reduce((a, b) => a + b, 0) / (data.length || 1);
+    return avg >= 1000000 ? "(Juta)" : "(rb)";
+  };
 
   const baseChartConfig = {
     backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF",
@@ -186,7 +188,7 @@ const Laporan: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* AREA GRAFIK */}
+        {/* AREA GRAFIK FIX */}
         <View style={styles.chartContainer}>
           {chartType === "pie" ? (
             <PieChart
@@ -198,6 +200,7 @@ const Laporan: React.FC = () => {
             />
           ) : (
             <>
+              {/* DIAGRAM PEMASUKAN */}
               {(viewFilter === 'all' || viewFilter === 'in') && (
                 <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
                   <Text style={[styles.subJudul, { color: "#00c853" }]}>Pemasukan {labelUnit(masukan)}</Text>
@@ -208,12 +211,23 @@ const Laporan: React.FC = () => {
                   )}
                 </View>
               )}
+
+              {/* DIAGRAM PENGELUARAN */}
+              {(viewFilter === 'all' || viewFilter === 'out') && (
+                <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
+                  <Text style={[styles.subJudul, { color: "#e53935" }]}>Pengeluaran {labelUnit(keluaran)}</Text>
+                  {chartType === "bar" ? (
+                    <BarChart data={{ labels, datasets: [{ data: skalaData(keluaran) }] }} width={screenWidth - 40} height={200} yAxisLabel="" yAxisSuffix="" chartConfig={{...baseChartConfig, color: () => "#e53935"}} fromZero />
+                  ) : (
+                    <LineChart data={{ labels, datasets: [{ data: skalaData(keluaran) }] }} width={screenWidth - 40} height={200} chartConfig={{...baseChartConfig, color: () => "#e53935"}} bezier />
+                  )}
+                </View>
+              )}
             </>
           )}
         </View>
       </ScrollView>
 
-      {/* PANGGIL KOMPONEN REUSABLE PDF DISINI */}
       <FloatingPDFButton onPress={exportKePDF} />
     </View>
   );
