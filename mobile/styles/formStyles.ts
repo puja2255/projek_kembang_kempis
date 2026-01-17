@@ -27,3 +27,7 @@ export const getFormStyles = (isDark: boolean) => StyleSheet.create({
     textAlign: 'center',
     color: isDark ? '#FFF' : '#333',
   },
+
+  inputGroup: {
+    marginBottom: 20,
+  },
