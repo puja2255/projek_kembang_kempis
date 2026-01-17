@@ -162,5 +162,6 @@ const styles = StyleSheet.create({
     card: { padding: 20, borderRadius: 16, elevation: 4, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10 },
     label: { fontSize: 14, fontWeight: '600', marginBottom: 8, marginTop: 15 },
     tabContainer: { flexDirection: 'row', gap: 10, marginBottom: 5 },
+    tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, borderWidth: 1 },
 
 });
