@@ -166,5 +166,6 @@ const styles = StyleSheet.create({
     tabMasuk: { backgroundColor: '#27ae60', borderColor: '#27ae60' },
     tabKeluar: { backgroundColor: '#e74c3c', borderColor: '#e74c3c' },
     tabText: { fontWeight: 'bold' },
+    input: { padding: 12, borderRadius: 10, fontSize: 16, borderWidth: 1, borderColor: 'transparent' },
 
 });
