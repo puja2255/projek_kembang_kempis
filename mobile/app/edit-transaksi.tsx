@@ -171,5 +171,6 @@ const styles = StyleSheet.create({
     dateInput: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     btnSimpan: { backgroundColor: '#2d9cdb', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 30 },
     btnSimpanText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
+    btnBatal: { marginTop: 15, alignItems: 'center', paddingBottom: 20 },
 
 });
