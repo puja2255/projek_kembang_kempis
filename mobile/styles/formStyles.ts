@@ -86,3 +86,10 @@ export const getFormStyles = (isDark: boolean) => StyleSheet.create({
     backgroundColor: isDark ? '#252525' : '#F9F9F9',
     borderColor: isDark ? '#333' : '#DDD',
   },
+
+  currencyPrefix: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginRight: 10,
+    color: '#27ae60',
+  },
