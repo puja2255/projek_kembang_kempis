@@ -132,3 +132,7 @@ const EditTransaksi = () => {
           <Text style={{ color: isDark ? '#FFF' : '#000' }}>{tanggal.toLocaleDateString('id-ID', { dateStyle: 'long' })}</Text>
           <MaterialCommunityIcons name="calendar" size={20} color="#2d9cdb" />
         </TouchableOpacity>
+
+        {showPicker && (
+          <DateTimePicker value={tanggal} mode="date" display="default" onChange={onChangeDate} />
+        )}
