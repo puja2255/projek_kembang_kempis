@@ -65,7 +65,7 @@ const Home: React.FC = () => {
   // --- FITUR EDIT: Navigasi ke inputan dengan membawa data ---
   const editTransaksi = (item: Transaksi) => {
     router.push({
-      pathname: '/edit-transaksi', // ⬅️ Arahkan ke file baru
+      pathname: '/edit-transaksi',
       params: { 
         id: item.id,
         jenis: item.jenis,
