@@ -140,3 +140,9 @@ export const getFormStyles = (isDark: boolean) => StyleSheet.create({
     fontSize: 17,
     fontWeight: 'bold',
   },
+
+  btnBatal: {
+    marginTop: 15,
+    paddingVertical: 10,
+    alignItems: 'center',
+  },
