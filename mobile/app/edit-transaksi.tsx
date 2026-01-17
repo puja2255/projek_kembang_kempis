@@ -164,5 +164,6 @@ const styles = StyleSheet.create({
     tabContainer: { flexDirection: 'row', gap: 10, marginBottom: 5 },
     tab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10, borderWidth: 1 },
     tabMasuk: { backgroundColor: '#27ae60', borderColor: '#27ae60' },
+    tabKeluar: { backgroundColor: '#e74c3c', borderColor: '#e74c3c' },
 
 });
