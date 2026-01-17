@@ -31,3 +31,12 @@ export const getFormStyles = (isDark: boolean) => StyleSheet.create({
   inputGroup: {
     marginBottom: 20,
   },
+
+  label: {
+    fontSize: 13,
+    fontWeight: '700',
+    marginBottom: 8,
+    marginTop: 10,
+    textTransform: 'uppercase',
+    color: isDark ? '#AAA' : '#666',
+  },
