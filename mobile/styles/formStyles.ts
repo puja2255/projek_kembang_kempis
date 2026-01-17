@@ -121,3 +121,16 @@ export const getFormStyles = (isDark: boolean) => StyleSheet.create({
     backgroundColor: isDark ? '#252525' : '#F9F9F9',
     borderColor: isDark ? '#333' : '#DDD',
   },
+
+  // Buttons
+  btnSimpan: {
+    backgroundColor: '#2d9cdb',
+    paddingVertical: 16,
+    borderRadius: 15,
+    alignItems: 'center',
+    marginTop: 25,
+    elevation: 5,
+    shadowColor: '#2d9cdb',
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
