@@ -128,4 +128,7 @@ const EditTransaksi = () => {
         <TouchableOpacity 
           style={[styles.input, styles.dateInput, { backgroundColor: isDark ? '#252525' : '#F9F9F9' }]} 
           onPress={() => setShowPicker(true)}
-        ></TouchableOpacity>
+        >
+          <Text style={{ color: isDark ? '#FFF' : '#000' }}>{tanggal.toLocaleDateString('id-ID', { dateStyle: 'long' })}</Text>
+          <MaterialCommunityIcons name="calendar" size={20} color="#2d9cdb" />
+        </TouchableOpacity>
