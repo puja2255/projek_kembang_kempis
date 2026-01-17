@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,8 +10,6 @@ import {
   TouchableOpacity,
   Modal,
   Platform,
-  Animated,
-  PanResponder,
 } from "react-native";
 import { BarChart, LineChart, PieChart } from "react-native-chart-kit";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -22,7 +20,6 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 
 const screenWidth = Dimensions.get("window").width;
-const screenHeight = Dimensions.get("window").height;
 
 type LaporanItem = {
   bulan: string; 
@@ -36,28 +33,20 @@ const Laporan: React.FC = () => {
 
   const [dataLaporan, setDataLaporan] = useState<LaporanItem[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // State untuk Dropdown Tipe Diagram
   const [chartType, setChartType] = useState<"bar" | "line" | "pie">("bar");
   const [openTipe, setOpenTipe] = useState(false);
+  
+  // State untuk Filter Waktu (Gaya Index / Modal)
   const [modalVisible, setModalVisible] = useState(false);
   const [modeFilterWaktu, setModeFilterWaktu] = useState<'Semua' | 'Hari' | 'Bulan' | 'Tahun'>('Bulan');
   const [tanggalPilihan, setTanggalPilihan] = useState<Date>(new Date());
   const [showPicker, setShowPicker] = useState(false);
+  
   const [viewFilter, setViewFilter] = useState<'all' | 'in' | 'out'>('all');
 
-  // --- LOGIKA TOMBOL BISA DIGESER (DRAGGABLE FAB) ---
-  const pan = useRef(new Animated.ValueXY({ x: screenWidth - 85, y: screenHeight - 250 })).current;
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        pan.setOffset({ x: pan.x._value, y: pan.y._value });
-      },
-      onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], { useNativeDriver: false }),
-      onPanResponderRelease: () => {
-        pan.flattenOffset();
-      },
-    })
-  ).current;
+  
 
   const ambilLaporan = async () => {
     setLoading(true);
@@ -83,6 +72,7 @@ const Laporan: React.FC = () => {
     if (date) setTanggalPilihan(date);
   };
 
+  // Logika Filter (Sinkron dengan Index)
   const filteredLaporan = dataLaporan.filter((item) => {
     const tglItem = new Date(item.bulan);
     if (modeFilterWaktu === 'Semua') return true;
@@ -91,33 +81,6 @@ const Laporan: React.FC = () => {
     if (modeFilterWaktu === 'Tahun') return tglItem.getFullYear() === tanggalPilihan.getFullYear();
     return true;
   });
-
-  const handleExportCSV = async () => {
-    if (filteredLaporan.length === 0) {
-      Alert.alert("Data Kosong", "Tidak ada data untuk diekspor pada periode ini.");
-      return;
-    }
-
-    let csvContent = "Tanggal,Pemasukan,Pengeluaran\n";
-    filteredLaporan.forEach(item => {
-      const tgl = new Date(item.bulan).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
-      csvContent += `${tgl},${item.pemasukan},${item.pengeluaran}\n`;
-    });
-
-    try {
-      const fileName = `Laporan_${modeFilterWaktu}_${Date.now()}.csv`;
-      const fileUri = FileSystem.documentDirectory + fileName;
-      await FileSystem.writeAsStringAsync(fileUri, csvContent, { encoding: FileSystem.EncodingType.UTF8 });
-
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(fileUri);
-      } else {
-        Alert.alert("Gagal", "Fitur berbagi tidak tersedia.");
-      }
-    } catch (error) {
-      Alert.alert("Error", "Gagal mengekspor data.");
-    }
-  };
 
   const dapatkanDataGrafik = () => {
     const dataTerbatas = filteredLaporan.slice(0, 6).reverse();
@@ -157,119 +120,68 @@ const Laporan: React.FC = () => {
   if (loading) return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#2d9cdb" /></View>;
 
   return (
-    <View style={{ flex: 1, backgroundColor: isDark ? "#121212" : "#FFFFFF" }}>
-      <ScrollView style={styles.container}>
-        <Text style={[styles.judul, { color: isDark ? "#FFFFFF" : "#000000" }]}>Laporan Transaksi</Text>
+    <ScrollView style={[styles.container, { backgroundColor: isDark ? "#121212" : "#FFFFFF" }]}>
+      <Text style={[styles.judul, { color: isDark ? "#FFFFFF" : "#000000" }]}>Laporan Transaksi</Text>
 
-        {/* Baris Filter & Dropdown Tipe */}
-        <View style={styles.rowDropdown}>
-          <TouchableOpacity 
-            style={[styles.filterBtn, { backgroundColor: isDark ? '#1E1E1E' : '#fff', borderColor: isDark ? '#333' : '#ccc' }]}
-            onPress={() => setModalVisible(true)}
-          >
-            <MaterialCommunityIcons name="tune-vertical" size={20} color="#2d9cdb" />
-            <Text style={{ marginLeft: 8, color: isDark ? '#fff' : '#333', fontWeight: '700' }}>Waktu</Text>
-          </TouchableOpacity>
-
-          <View style={styles.dropdownHalf}>
-            <TouchableOpacity 
-              style={[styles.dropdownBtn, { backgroundColor: isDark ? "#1E1E1E" : "#F0F0F0" }]} 
-              onPress={() => setOpenTipe(!openTipe)}
-            >
-              <Text style={[styles.btnText, { color: isDark ? "#FFF" : "#000" }]}>
-                 {chartType === "bar" ? "Batang" : chartType === "line" ? "Garis" : "Lingkaran"} ▼
-              </Text>
-            </TouchableOpacity>
-            {openTipe && (
-              <View style={[styles.dropdownList, { backgroundColor: isDark ? "#2A2A2A" : "#FFF" }]}>
-                {[{ id: "bar", label: "Batang" }, { id: "line", label: "Garis" }, { id: "pie", label: "Lingkaran" }].map((item) => (
-                  <TouchableOpacity key={item.id} style={styles.dropdownItem} onPress={() => { setChartType(item.id as any); setOpenTipe(false); }}>
-                    <Text style={{ color: isDark ? "#FFF" : "#000" }}>{item.label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </View>
-        </View>
-
-        <View style={styles.activeFilterLabel}>
-            <Text style={{ color: '#2d9cdb', fontSize: 12, fontWeight: '700' }}>
-              Periode: {modeFilterWaktu === 'Semua' ? 'Semua' : 
-                        modeFilterWaktu === 'Hari' ? tanggalPilihan.toLocaleDateString('id-ID') : 
-                        modeFilterWaktu === 'Bulan' ? tanggalPilihan.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) : 
-                        tanggalPilihan.getFullYear()}
-            </Text>
-        </View>
-
-        {/* Tab Ringkasan */}
-        <View style={[styles.summaryCard, { backgroundColor: isDark ? "#1E1E1E" : "#F8F9FA" }]}>
-          <TouchableOpacity style={[styles.tabBtn, viewFilter === 'in' && styles.activeTab]} onPress={() => setViewFilter('in')}>
-            <Text style={styles.tabLabel}>Masuk</Text>
-            <Text style={[styles.tabValue, { color: "#00c853" }]}>{formatValueDinamis(totalIn).replace('Rp ', '')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.symbolBtnKotak, { backgroundColor: viewFilter === 'all' ? "#4a90e2" : isDark ? "#333" : "#E0E0E0" }]} onPress={() => setViewFilter('all')}>
-            <Text style={[styles.symbolIcon, { color: viewFilter === 'all' ? "#FFF" : isDark ? "#888" : "#666" }]}>☷</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.tabBtn, viewFilter === 'out' && styles.activeTab]} onPress={() => setViewFilter('out')}>
-            <Text style={styles.tabLabel}>Keluar</Text>
-            <Text style={[styles.tabValue, { color: "#e53935" }]}>{formatValueDinamis(totalOut).replace('Rp ', '')}</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Grafik */}
-        {chartType === "pie" ? (
-          <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
-            <PieChart
-              data={[
-                { name: `In (${formatValueDinamis(totalIn).replace('Rp ', '')})`, population: totalIn, color: "#00c853", legendFontColor: isDark ? "#FFF" : "#000", legendFontSize: 11 },
-                { name: `Out (${formatValueDinamis(totalOut).replace('Rp ', '')})`, population: totalOut, color: "#e53935", legendFontColor: isDark ? "#FFF" : "#000", legendFontSize: 11 }
-              ]}
-              width={screenWidth - 40} height={220} chartConfig={baseChartConfig} accessor="population" backgroundColor="transparent" paddingLeft="15" absolute
-            />
-          </View>
-        ) : (
-          <>
-            {(viewFilter === 'all' || viewFilter === 'in') && (
-              <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
-                <Text style={[styles.subJudul, { color: "#00c853" }]}>Pemasukan {labelUnit(masukan)}</Text>
-                {chartType === "bar" ? (
-                  <BarChart data={{ labels, datasets: [{ data: skalaData(masukan) }] }} width={screenWidth - 40} height={200} yAxisLabel="" yAxisSuffix="" chartConfig={{...baseChartConfig, color: () => "#00c853"}} fromZero />
-                ) : (
-                  <LineChart data={{ labels, datasets: [{ data: skalaData(masukan) }] }} width={screenWidth - 40} height={200} chartConfig={{...baseChartConfig, color: () => "#00c853"}} bezier />
-                )}
-              </View>
-            )}
-
-            {(viewFilter === 'all' || viewFilter === 'out') && (
-              <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
-                <Text style={[styles.subJudul, { color: "#e53935" }]}>Pengeluaran {labelUnit(keluaran)}</Text>
-                {chartType === "bar" ? (
-                  <BarChart data={{ labels, datasets: [{ data: skalaData(keluaran) }] }} width={screenWidth - 40} height={200} yAxisLabel="" yAxisSuffix="" chartConfig={{...baseChartConfig, color: () => "#e53935"}} fromZero />
-                ) : (
-                  <LineChart data={{ labels, datasets: [{ data: skalaData(keluaran) }] }} width={screenWidth - 40} height={200} chartConfig={{...baseChartConfig, color: () => "#e53935"}} bezier />
-                )}
-              </View>
-            )}
-          </>
-        )}
-      </ScrollView>
-
-      {/* --- TOMBOL EXPORT DRAGGABLE (KOTAK HIJAU) --- */}
-      <Animated.View
-        {...panResponder.panHandlers}
-        style={[pan.getLayout(), styles.floatingButtonContainer]}
-      >
+      {/* --- BARIS FILTER (Kalender Modal & Dropdown Diagram) --- */}
+      <View style={styles.rowDropdown}>
+        {/* Tombol Filter Kalender (Gaya Index) */}
         <TouchableOpacity 
-          style={styles.exportFab} 
-          onPress={handleExportCSV}
-          activeOpacity={0.8}
+          style={[styles.filterBtn, { backgroundColor: isDark ? '#1E1E1E' : '#fff', borderColor: isDark ? '#333' : '#ccc' }]}
+          onPress={() => setModalVisible(true)}
         >
-          <MaterialCommunityIcons name="file-excel" size={28} color="#fff" />
-          <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>EXPORT</Text>
+          <MaterialCommunityIcons name="tune-vertical" size={20} color="#2d9cdb" />
+          <Text style={{ marginLeft: 8, color: isDark ? '#fff' : '#333', fontWeight: '700' }}>Waktu</Text>
         </TouchableOpacity>
-      </Animated.View>
 
-      {/* MODAL FILTER */}
+        {/* Dropdown Tipe Diagram */}
+        <View style={styles.dropdownContainer}>
+          <TouchableOpacity 
+            style={[styles.dropdownBtn, { backgroundColor: isDark ? "#1E1E1E" : "#F0F0F0" }]} 
+            onPress={() => setOpenTipe(!openTipe)}
+          >
+            <Text style={[styles.btnText, { color: isDark ? "#FFF" : "#000" }]}>
+               {chartType === "bar" ? "Batang" : chartType === "line" ? "Garis" : "Lingkaran"} ▼
+            </Text>
+          </TouchableOpacity>
+          {openTipe && (
+            <View style={[styles.dropdownList, { backgroundColor: isDark ? "#2A2A2A" : "#FFF" }]}>
+              {[{ id: "bar", label: "Batang" }, { id: "line", label: "Garis" }, { id: "pie", label: "Lingkaran" }].map((item) => (
+                <TouchableOpacity key={item.id} style={styles.dropdownItem} onPress={() => { setChartType(item.id as any); setOpenTipe(false); }}>
+                  <Text style={{ color: isDark ? "#FFF" : "#000" }}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+      </View>
+
+      {/* Info Filter Aktif */}
+      <View style={styles.activeFilterLabel}>
+          <Text style={{ color: '#2d9cdb', fontSize: 12, fontWeight: '700' }}>
+            Periode: {modeFilterWaktu === 'Semua' ? 'Semua' : 
+                      modeFilterWaktu === 'Hari' ? tanggalPilihan.toLocaleDateString('id-ID') : 
+                      modeFilterWaktu === 'Bulan' ? tanggalPilihan.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) : 
+                      tanggalPilihan.getFullYear()}
+          </Text>
+      </View>
+
+      {/* Tab Filter In/Out */}
+      <View style={[styles.summaryCard, { backgroundColor: isDark ? "#1E1E1E" : "#F8F9FA" }]}>
+        <TouchableOpacity style={[styles.tabBtn, viewFilter === 'in' && styles.activeTab]} onPress={() => setViewFilter('in')}>
+          <Text style={styles.tabLabel}>Masuk</Text>
+          <Text style={[styles.tabValue, { color: "#00c853" }]}>{formatValueDinamis(totalIn).replace('Rp ', '')}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.symbolBtnKotak, { backgroundColor: viewFilter === 'all' ? "#4a90e2" : isDark ? "#333" : "#E0E0E0" }]} onPress={() => setViewFilter('all')}>
+          <Text style={[styles.symbolIcon, { color: viewFilter === 'all' ? "#FFF" : isDark ? "#888" : "#666" }]}>☷</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.tabBtn, viewFilter === 'out' && styles.activeTab]} onPress={() => setViewFilter('out')}>
+          <Text style={styles.tabLabel}>Keluar</Text>
+          <Text style={[styles.tabValue, { color: "#e53935" }]}>{formatValueDinamis(totalOut).replace('Rp ', '')}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* --- MODAL FILTER KALENDER (IDENTIK INDEX) --- */}
       <Modal animationType="slide" transparent visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: isDark ? '#1E1E1E' : '#FFF' }]}>
@@ -302,7 +214,62 @@ const Laporan: React.FC = () => {
       </Modal>
 
       {showPicker && <DateTimePicker value={tanggalPilihan} mode="date" display="default" onChange={handleConfirmDate} />}
-    </View>
+
+      {/* Area Grafik */}
+      {chartType === "pie" ? (
+        <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
+          <PieChart
+            data={[
+              { 
+                name: `In (${formatValueDinamis(totalIn).replace('Rp ', '')})`, 
+                population: totalIn, 
+                color: "#00c853", 
+                legendFontColor: isDark ? "#FFF" : "#000", 
+                legendFontSize: 12 
+              },
+              { 
+                name: `Out (${formatValueDinamis(totalOut).replace('Rp ', '')})`, 
+                population: totalOut, 
+                color: "#e53935", 
+                legendFontColor: isDark ? "#FFF" : "#000", 
+                legendFontSize: 12 
+              }
+            ]}
+            width={screenWidth - 40}
+            height={220}
+            chartConfig={baseChartConfig}
+            accessor="population"
+            backgroundColor="transparent"
+            paddingLeft="15"
+            absolute // Ini akan tetap menampilkan angka persentase jika diperlukan, tapi label teks kita sudah rapi
+          />
+        </View>
+      ) : (
+        <>
+          {(viewFilter === 'all' || viewFilter === 'in') && (
+            <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
+              <Text style={[styles.subJudul, { color: "#00c853" }]}>Pemasukan {labelUnit(masukan)}</Text>
+              {chartType === "bar" ? (
+                <BarChart data={{ labels, datasets: [{ data: skalaData(masukan) }] }} width={screenWidth - 40} height={200} yAxisLabel="" yAxisSuffix="" chartConfig={{...baseChartConfig, color: () => "#00c853"}} fromZero />
+              ) : (
+                <LineChart data={{ labels, datasets: [{ data: skalaData(masukan) }] }} width={screenWidth - 40} height={200} chartConfig={{...baseChartConfig, color: () => "#00c853"}} bezier />
+              )}
+            </View>
+          )}
+
+          {(viewFilter === 'all' || viewFilter === 'out') && (
+            <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
+              <Text style={[styles.subJudul, { color: "#e53935" }]}>Pengeluaran {labelUnit(keluaran)}</Text>
+              {chartType === "bar" ? (
+                <BarChart data={{ labels, datasets: [{ data: skalaData(keluaran) }] }} width={screenWidth - 40} height={200} yAxisLabel="" yAxisSuffix="" chartConfig={{...baseChartConfig, color: () => "#e53935"}} fromZero />
+              ) : (
+                <LineChart data={{ labels, datasets: [{ data: skalaData(keluaran) }] }} width={screenWidth - 40} height={200} chartConfig={{...baseChartConfig, color: () => "#e53935"}} bezier />
+              )}
+            </View>
+          )}
+        </>
+      )}
+    </ScrollView>
   );
 };
 
@@ -313,8 +280,8 @@ const styles = StyleSheet.create({
   subJudul: { fontSize: 16, fontWeight: "600", marginBottom: 10, textAlign: "center" },
   chartBox: { marginBottom: 25, borderRadius: 12, padding: 15, elevation: 3 },
   rowDropdown: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15, zIndex: 100 },
-  filterBtn: { flex: 0.48, flexDirection: 'row', padding: 12, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  dropdownHalf: { flex: 0.48 },
+  filterBtn: { flex: 0.45, flexDirection: 'row', padding: 12, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  dropdownContainer: { flex: 0.45 },
   dropdownBtn: { padding: 12, borderRadius: 10, alignItems: 'center', elevation: 2 },
   btnText: { fontWeight: 'bold', fontSize: 14 },
   dropdownList: { position: 'absolute', top: 50, left: 0, right: 0, borderRadius: 10, elevation: 5, zIndex: 999 },
@@ -338,22 +305,6 @@ const styles = StyleSheet.create({
   dateSelector: { flexDirection: 'row', alignItems: 'center', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#eee', marginBottom: 20 },
   applyBtn: { backgroundColor: '#2d9cdb', padding: 15, borderRadius: 12, alignItems: 'center' },
   applyBtnText: { color: '#fff', fontWeight: 'bold' },
-  
-  // Style FAB
-  floatingButtonContainer: { position: "absolute", zIndex: 1000 },
-  exportFab: {
-    backgroundColor: "#28a745",
-    width: 65,
-    height: 65,
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-  },
 });
 
 export default Laporan;
