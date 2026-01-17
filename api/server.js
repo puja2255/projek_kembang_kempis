@@ -3,26 +3,27 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const cors = require('cors');
-require('dotenv').config(); // Untuk memuat .env
+require('dotenv').config();
 
 const prisma = new PrismaClient();
 const app = express();
 const PORT = 3000;
 
-app.use(cors()); // Izinkan aplikasi React Native mengakses API
-app.use(express.json()); // Izinkan server membaca body JSON
+app.use(cors());
+app.use(express.json());
 
 // --- Rute Transaksi ---
 
 // 1. INPUT (POST) Transaksi Baru
 app.post('/transaksi', async (req, res) => {
-  const { jenis, jumlah, deskripsi, tanggal } = req.body;
+  const { jenis, jumlah, deskripsi, deskripsiTambahan, tanggal } = req.body;
   try {
     const baru = await prisma.transaksi.create({
       data: {
         jenis,
-        jumlah: parseFloat(jumlah), // Pastikan jumlah adalah angka
+        jumlah: parseFloat(jumlah),
         deskripsi,
+        deskripsiTambahan: deskripsiTambahan || '', // Tambahkan ini
         tanggal: tanggal ? new Date(tanggal) : undefined,
       },
     });
@@ -37,21 +38,52 @@ app.post('/transaksi', async (req, res) => {
 app.get('/transaksi', async (req, res) => {
   try {
     const semua = await prisma.transaksi.findMany({
-      orderBy: {
-        tanggal: 'desc',
-      },
+      orderBy: { tanggal: 'desc' },
     });
     res.json(semua);
   } catch (error) {
-    res.status(500).json({ error: 'Gagal mengambil data transaksi' });
+    res.status(500).json({ error: 'Gagal mengambil data' });
   }
 });
 
-// 3. GET Laporan/Grafis (Contoh Sederhana: Total Pemasukan/Pengeluaran Bulanan)
+// 3. UPDATE (PUT) Transaksi Berdasarkan ID (UNTUK FITUR EDIT)
+app.put('/transaksi/:id', async (req, res) => {
+  const { id } = req.params;
+  const { jenis, jumlah, deskripsi, deskripsiTambahan, tanggal } = req.body;
+  try {
+    const updateData = await prisma.transaksi.update({
+      where: { id: id }, // Pastikan ID sesuai (string/int tergantung schema prisma)
+      data: {
+        jenis,
+        jumlah: parseFloat(jumlah),
+        deskripsi,
+        deskripsiTambahan: deskripsiTambahan || '',
+        tanggal: tanggal ? new Date(tanggal) : undefined,
+      },
+    });
+    res.json(updateData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Gagal memperbarui transaksi di database' });
+  }
+});
+
+// 4. DELETE Transaksi (UNTUK FITUR HAPUS)
+app.delete('/transaksi/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.transaksi.delete({
+      where: { id: id },
+    });
+    res.json({ message: 'Transaksi berhasil dihapus' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Gagal menghapus transaksi' });
+  }
+});
+
+// 5. GET Laporan
 app.get('/laporan', async (req, res) => {
-  // Ini adalah bagian kompleks. Untuk pemula, kita sediakan data mentah dulu.
-  // Analisis data akan lebih mudah dilakukan di sisi client (React Native).
-  // Namun, jika ingin di backend:
   try {
       const hasil = await prisma.$queryRaw`
           SELECT
@@ -71,7 +103,6 @@ app.get('/laporan', async (req, res) => {
       res.status(500).json({ error: 'Gagal membuat laporan' });
   }
 });
-
 
 app.listen(PORT, () => {
   console.log(`Server berjalan di http://localhost:${PORT}`);
