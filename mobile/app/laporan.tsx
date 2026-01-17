@@ -46,6 +46,12 @@ const Laporan: React.FC = () => {
   
   const [viewFilter, setViewFilter] = useState<'all' | 'in' | 'out'>('all');
 
+  const handleExportCSV = async () => {
+    if (filteredLaporan.length === 0) {
+      Alert.alert("Data Kosong", "Tidak ada data untuk diekspor pada periode ini.");
+      return;
+    }
+
   const ambilLaporan = async () => {
     setLoading(true);
     try {
