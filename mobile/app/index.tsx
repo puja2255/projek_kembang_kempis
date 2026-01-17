@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,8 +9,6 @@ import {
   Alert,
   TouchableOpacity,
   TextInput,
-  Animated,
-  PanResponder,
 } from 'react-native';
 
 import { useFocusEffect, useRouter } from 'expo-router';
@@ -20,6 +18,7 @@ import * as Sharing from 'expo-sharing';
 
 import Kartu from '../komponen/Kartu';
 import FilterModal from '../komponen/FilterModal';
+import FloatingPDFButton from '../komponen/FloatingPDFButton'; // Import komponen reusable
 import { useTheme } from '../komponen/ThemeContext';
 import { Transaksi, formatRupiah } from '../komponen/tipe';
 import { on as busOn } from '../komponen/eventBus';
@@ -39,29 +38,6 @@ const Home: React.FC = () => {
   const [filterJenis, setFilterJenis] = useState<'Semua' | 'Pemasukan' | 'Pengeluaran'>('Semua');
   const [modeFilterWaktu, setModeFilterWaktu] = useState<'Semua' | 'Hari' | 'Bulan' | 'Tahun'>('Semua');
   const [tanggalPilihan, setTanggalPilihan] = useState<Date>(new Date());
-
-  // --- LOGIKA DRAGGABLE FAB ---
-  const pan = useRef(new Animated.ValueXY()).current;
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: () => {
-        pan.setOffset({
-          // @ts-ignore
-          x: pan.x._value,
-          // @ts-ignore
-          y: pan.y._value
-        });
-      },
-      onPanResponderMove: Animated.event(
-        [null, { dx: pan.x, dy: pan.y }],
-        { useNativeDriver: false }
-      ),
-      onPanResponderRelease: () => {
-        pan.flattenOffset();
-      },
-    })
-  ).current;
 
   const ambilData = async () => {
     setLoading(true);
@@ -119,10 +95,10 @@ const Home: React.FC = () => {
     }
     const rows = filteredData.map((item, index) => `
       <tr>
-        <td>${index + 1}</td>
-        <td>${item.deskripsi}</td>
-        <td>${new Date(item.tanggal).toLocaleDateString('id-ID')}</td>
-        <td style="color: ${item.jenis === 'Pemasukan' ? 'green' : 'red'}">${item.jenis === 'Pemasukan' ? '' : '-'}Rp ${formatRupiah(item.jumlah)}</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">${index + 1}</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">${item.deskripsi}</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">${new Date(item.tanggal).toLocaleDateString('id-ID')}</td>
+        <td style="border: 1px solid #ddd; padding: 8px; color: ${item.jenis === 'Pemasukan' ? 'green' : 'red'}">${item.jenis === 'Pemasukan' ? '' : '-'}Rp ${formatRupiah(item.jumlah)}</td>
       </tr>`).join('');
 
     const html = `<html><body style="font-family: sans-serif; padding: 20px;"><h1 style="text-align: center;">Laporan Transaksi</h1><p>Periode: ${modeFilterWaktu}</p><table style="width: 100%; border-collapse: collapse;"><thead><tr style="background-color: #2d9cdb; color: white;"><th style="border: 1px solid #ddd; padding: 8px;">No</th><th style="border: 1px solid #ddd; padding: 8px;">Deskripsi</th><th style="border: 1px solid #ddd; padding: 8px;">Tanggal</th><th style="border: 1px solid #ddd; padding: 8px;">Jumlah</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
@@ -199,25 +175,8 @@ const Home: React.FC = () => {
         )}
       </ScrollView>
 
-      {/* DRAGGABLE FAB PDF */}
-      <Animated.View
-        {...panResponder.panHandlers}
-        style={[
-          styles.fab, 
-          { 
-            backgroundColor: '#e74c3c',
-            transform: pan.getTranslateTransform() 
-          }
-        ]}
-      >
-        <TouchableOpacity 
-          onPress={exportKePDF} 
-          style={styles.fabTouch}
-          activeOpacity={0.8}
-        >
-          <MaterialCommunityIcons name="file-pdf-box" size={28} color="#fff" />
-        </TouchableOpacity>
-      </Animated.View>
+      {/* PAKAI KOMPONEN REUSABLE DISINI */}
+      <FloatingPDFButton onPress={exportKePDF} />
     </View>
   );
 };
@@ -238,22 +197,6 @@ const styles = StyleSheet.create({
   judulList: { fontSize: 18, fontWeight: 'bold', marginTop: 10, marginBottom: 5 },
   list: { flex: 1 },
   emptyText: { textAlign: 'center', marginTop: 30 },
-  fab: { 
-    position: 'absolute', 
-    right: 18, 
-    bottom: 24, 
-    width: 60, 
-    height: 60, 
-    borderRadius: 30, 
-    elevation: 10,
-    zIndex: 999 
-  },
-  fabTouch: {
-    width: '100%',
-    height: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-  }
 });
 
 export default Home;
