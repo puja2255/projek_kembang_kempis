@@ -7,10 +7,8 @@ import { useTheme } from './ThemeContext';
 interface FilterModalProps {
   visible: boolean;
   onClose: () => void;
-  // Filter Jenis Transaksi (Opsional, karena di Laporan tidak pakai)
   filterJenis?: 'Semua' | 'Pemasukan' | 'Pengeluaran';
   onFilterJenisChange?: (jenis: 'Semua' | 'Pemasukan' | 'Pengeluaran') => void;
-  // Filter Waktu
   modeWaktu: 'Semua' | 'Hari' | 'Bulan' | 'Tahun';
   onModeWaktuChange: (mode: 'Semua' | 'Hari' | 'Bulan' | 'Tahun') => void;
   tanggal: Date;
@@ -41,18 +39,17 @@ const FilterModal: React.FC<FilterModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          {/* Bagian Tipe Transaksi (Hanya muncul jika props dikirim) */}
           {onFilterJenisChange && (
             <>
               <Text style={[styles.modalSubTitle, { color: isDark ? '#AAA' : '#666' }]}>Tipe Transaksi</Text>
-              <div style={styles.modalModeRow}>
+              <View style={styles.modalModeRow}>
                 {(['Semua', 'Pemasukan', 'Pengeluaran'] as const).map((t) => (
                   <TouchableOpacity key={t} onPress={() => onFilterJenisChange(t)}
                     style={[styles.modeBtn, filterJenis === t && styles.modeBtnActive]}>
                     <Text style={[styles.modeBtnText, filterJenis === t && { color: '#FFF' }]}>{t}</Text>
                   </TouchableOpacity>
                 ))}
-              </div>
+              </View>
               <View style={styles.separator} />
             </>
           )}
@@ -86,7 +83,6 @@ const FilterModal: React.FC<FilterModalProps> = ({
   );
 };
 
-// ... copy styles dari Modal Home kamu ...
 const styles = StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
   modalContent: { width: '90%', padding: 20, borderRadius: 20 },
