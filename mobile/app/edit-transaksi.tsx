@@ -169,5 +169,6 @@ const styles = StyleSheet.create({
     input: { padding: 12, borderRadius: 10, fontSize: 16, borderWidth: 1, borderColor: 'transparent' },
     textArea: { height: 80, textAlignVertical: 'top' },
     dateInput: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    btnSimpan: { backgroundColor: '#2d9cdb', padding: 16, borderRadius: 12, alignItems: 'center', marginTop: 30 },
 
 });
