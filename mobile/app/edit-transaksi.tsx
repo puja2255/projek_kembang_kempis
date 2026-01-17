@@ -94,3 +94,13 @@ const EditTransaksi = () => {
             </TouchableOpacity>
           ))}
         </View>
+
+        <Text style={[styles.label, { color: isDark ? '#AAA' : '#666' }]}>Jumlah (Rp)</Text>
+        <TextInput
+          style={[styles.input, { backgroundColor: isDark ? '#252525' : '#F9F9F9', color: isDark ? '#FFF' : '#000' }]}
+          keyboardType="numeric"
+          value={jumlah}
+          onChangeText={setJumlah}
+          placeholder="0"
+          placeholderTextColor="#888"
+        />
