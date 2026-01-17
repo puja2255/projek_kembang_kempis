@@ -129,6 +129,25 @@ const Laporan: React.FC = () => {
       const tgl = new Date(item.bulan).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
       csvContent += `${tgl},${item.pemasukan},${item.pengeluaran}\n`;
     });
+    try {
+      // 3. Tentukan lokasi file sementara
+      const fileName = `Laporan_Keuangan_${modeFilterWaktu}.csv`;
+      const fileUri = FileSystem.documentDirectory + fileName;
+
+      // 4. Tulis file ke storage lokal ponsel
+      await FileSystem.writeAsStringAsync(fileUri, csvContent, { encoding: FileSystem.EncodingType.UTF8 });
+
+      // 5. Buka menu sharing (WhatsApp, Email, dll)
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(fileUri);
+      } else {
+        Alert.alert("Gagal", "Fitur berbagi tidak tersedia di perangkat ini.");
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Gagal mengekspor data.");
+    }
+  };
 
   if (loading) return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#2d9cdb" /></View>;
 
