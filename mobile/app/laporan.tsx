@@ -33,24 +33,13 @@ const Laporan: React.FC = () => {
 
   const [dataLaporan, setDataLaporan] = useState<LaporanItem[]>([]);
   const [loading, setLoading] = useState(true);
-  
-  // State untuk Dropdown Tipe Diagram
   const [chartType, setChartType] = useState<"bar" | "line" | "pie">("bar");
   const [openTipe, setOpenTipe] = useState(false);
-  
-  // State untuk Filter Waktu (Gaya Index / Modal)
   const [modalVisible, setModalVisible] = useState(false);
   const [modeFilterWaktu, setModeFilterWaktu] = useState<'Semua' | 'Hari' | 'Bulan' | 'Tahun'>('Bulan');
   const [tanggalPilihan, setTanggalPilihan] = useState<Date>(new Date());
   const [showPicker, setShowPicker] = useState(false);
-  
   const [viewFilter, setViewFilter] = useState<'all' | 'in' | 'out'>('all');
-
-  const handleExportCSV = async () => {
-    if (filteredLaporan.length === 0) {
-      Alert.alert("Data Kosong", "Tidak ada data untuk diekspor pada periode ini.");
-      return;
-    }
 
   const ambilLaporan = async () => {
     setLoading(true);
@@ -76,7 +65,6 @@ const Laporan: React.FC = () => {
     if (date) setTanggalPilihan(date);
   };
 
-  // Logika Filter (Sinkron dengan Index)
   const filteredLaporan = dataLaporan.filter((item) => {
     const tglItem = new Date(item.bulan);
     if (modeFilterWaktu === 'Semua') return true;
@@ -85,6 +73,34 @@ const Laporan: React.FC = () => {
     if (modeFilterWaktu === 'Tahun') return tglItem.getFullYear() === tanggalPilihan.getFullYear();
     return true;
   });
+
+  // --- FUNGSI EXPORT CSV (DIPERBAIKI) ---
+  const handleExportCSV = async () => {
+    if (filteredLaporan.length === 0) {
+      Alert.alert("Data Kosong", "Tidak ada data untuk diekspor pada periode ini.");
+      return;
+    }
+
+    let csvContent = "Tanggal,Pemasukan,Pengeluaran\n";
+    filteredLaporan.forEach(item => {
+      const tgl = new Date(item.bulan).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+      csvContent += `${tgl},${item.pemasukan},${item.pengeluaran}\n`;
+    });
+
+    try {
+      const fileName = `Laporan_${modeFilterWaktu}_${Date.now()}.csv`;
+      const fileUri = <FileSystem className="documentDirectory"></FileSystem> + fileName;
+      await FileSystem.writeAsStringAsync(fileUri, csvContent, { encoding: FileSystem.EncodingType.UTF8 });
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(fileUri);
+      } else {
+        Alert.alert("Gagal", "Fitur berbagi tidak tersedia.");
+      }
+    } catch (error) {
+      Alert.alert("Error", "Gagal mengekspor data.");
+    }
+  };
 
   const dapatkanDataGrafik = () => {
     const dataTerbatas = filteredLaporan.slice(0, 6).reverse();
@@ -121,43 +137,14 @@ const Laporan: React.FC = () => {
     propsForLabels: { fontSize: 10 },
   };
 
-  // 1. Buat Header CSV
-    let csvContent = "Bulan/Tanggal,Pemasukan,Pengeluaran\n";
-
-    // 2. Masukkan Data dari filteredLaporan
-    filteredLaporan.forEach(item => {
-      const tgl = new Date(item.bulan).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
-      csvContent += `${tgl},${item.pemasukan},${item.pengeluaran}\n`;
-    });
-    try {
-      // 3. Tentukan lokasi file sementara
-      const fileName = `Laporan_Keuangan_${modeFilterWaktu}.csv`;
-      const fileUri = FileSystem.documentDirectory + fileName;
-
-      // 4. Tulis file ke storage lokal ponsel
-      await FileSystem.writeAsStringAsync(fileUri, csvContent, { encoding: FileSystem.EncodingType.UTF8 });
-
-      // 5. Buka menu sharing (WhatsApp, Email, dll)
-      if (await Sharing.isAvailableAsync()) {
-        await Sharing.shareAsync(fileUri);
-      } else {
-        Alert.alert("Gagal", "Fitur berbagi tidak tersedia di perangkat ini.");
-      }
-    } catch (error) {
-      console.error(error);
-      Alert.alert("Error", "Gagal mengekspor data.");
-    }
-  };
-
   if (loading) return <View style={styles.loadingContainer}><ActivityIndicator size="large" color="#2d9cdb" /></View>;
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: isDark ? "#121212" : "#FFFFFF" }]}>
       <Text style={[styles.judul, { color: isDark ? "#FFFFFF" : "#000000" }]}>Laporan Transaksi</Text>
 
-      {/* --- BARIS FILTER (Kalender Modal & Dropdown Diagram) --- */}
+      {/* Baris Filter & Export */}
       <View style={styles.rowDropdown}>
-        {/* Tombol Filter Kalender (Gaya Index) */}
         <TouchableOpacity 
           style={[styles.filterBtn, { backgroundColor: isDark ? '#1E1E1E' : '#fff', borderColor: isDark ? '#333' : '#ccc' }]}
           onPress={() => setModalVisible(true)}
@@ -166,29 +153,36 @@ const Laporan: React.FC = () => {
           <Text style={{ marginLeft: 8, color: isDark ? '#fff' : '#333', fontWeight: '700' }}>Waktu</Text>
         </TouchableOpacity>
 
-        {/* Dropdown Tipe Diagram */}
-        <View style={styles.dropdownContainer}>
-          <TouchableOpacity 
-            style={[styles.dropdownBtn, { backgroundColor: isDark ? "#1E1E1E" : "#F0F0F0" }]} 
-            onPress={() => setOpenTipe(!openTipe)}
-          >
-            <Text style={[styles.btnText, { color: isDark ? "#FFF" : "#000" }]}>
-               {chartType === "bar" ? "Batang" : chartType === "line" ? "Garis" : "Lingkaran"} ▼
-            </Text>
-          </TouchableOpacity>
-          {openTipe && (
-            <View style={[styles.dropdownList, { backgroundColor: isDark ? "#2A2A2A" : "#FFF" }]}>
-              {[{ id: "bar", label: "Batang" }, { id: "line", label: "Garis" }, { id: "pie", label: "Lingkaran" }].map((item) => (
-                <TouchableOpacity key={item.id} style={styles.dropdownItem} onPress={() => { setChartType(item.id as any); setOpenTipe(false); }}>
-                  <Text style={{ color: isDark ? "#FFF" : "#000" }}>{item.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
+        <TouchableOpacity 
+          style={[styles.filterBtn, { backgroundColor: '#28a745', borderColor: '#28a745' }]}
+          onPress={handleExportCSV}
+        >
+          <MaterialCommunityIcons name="file-export" size={20} color="#fff" />
+          <Text style={{ marginLeft: 8, color: '#fff', fontWeight: '700' }}>Export</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Info Filter Aktif */}
+      {/* Dropdown Tipe Diagram */}
+      <View style={[styles.dropdownContainerFull, { marginBottom: 15 }]}>
+        <TouchableOpacity 
+          style={[styles.dropdownBtn, { backgroundColor: isDark ? "#1E1E1E" : "#F0F0F0" }]} 
+          onPress={() => setOpenTipe(!openTipe)}
+        >
+          <Text style={[styles.btnText, { color: isDark ? "#FFF" : "#000" }]}>
+             Tipe: {chartType === "bar" ? "Batang" : chartType === "line" ? "Garis" : "Lingkaran"} ▼
+          </Text>
+        </TouchableOpacity>
+        {openTipe && (
+          <View style={[styles.dropdownList, { backgroundColor: isDark ? "#2A2A2A" : "#FFF" }]}>
+            {[{ id: "bar", label: "Batang" }, { id: "line", label: "Garis" }, { id: "pie", label: "Lingkaran" }].map((item) => (
+              <TouchableOpacity key={item.id} style={styles.dropdownItem} onPress={() => { setChartType(item.id as any); setOpenTipe(false); }}>
+                <Text style={{ color: isDark ? "#FFF" : "#000" }}>{item.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+      </View>
+
       <View style={styles.activeFilterLabel}>
           <Text style={{ color: '#2d9cdb', fontSize: 12, fontWeight: '700' }}>
             Periode: {modeFilterWaktu === 'Semua' ? 'Semua' : 
@@ -198,7 +192,6 @@ const Laporan: React.FC = () => {
           </Text>
       </View>
 
-      {/* Tab Filter In/Out */}
       <View style={[styles.summaryCard, { backgroundColor: isDark ? "#1E1E1E" : "#F8F9FA" }]}>
         <TouchableOpacity style={[styles.tabBtn, viewFilter === 'in' && styles.activeTab]} onPress={() => setViewFilter('in')}>
           <Text style={styles.tabLabel}>Masuk</Text>
@@ -213,7 +206,6 @@ const Laporan: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* --- MODAL FILTER KALENDER (IDENTIK INDEX) --- */}
       <Modal animationType="slide" transparent visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: isDark ? '#1E1E1E' : '#FFF' }]}>
@@ -247,7 +239,6 @@ const Laporan: React.FC = () => {
 
       {showPicker && <DateTimePicker value={tanggalPilihan} mode="date" display="default" onChange={handleConfirmDate} />}
 
-      {/* Area Grafik */}
       {chartType === "pie" ? (
         <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
           <PieChart
@@ -273,7 +264,7 @@ const Laporan: React.FC = () => {
             accessor="population"
             backgroundColor="transparent"
             paddingLeft="15"
-            absolute // Ini akan tetap menampilkan angka persentase jika diperlukan, tapi label teks kita sudah rapi
+            absolute
           />
         </View>
       ) : (
@@ -312,8 +303,8 @@ const styles = StyleSheet.create({
   subJudul: { fontSize: 16, fontWeight: "600", marginBottom: 10, textAlign: "center" },
   chartBox: { marginBottom: 25, borderRadius: 12, padding: 15, elevation: 3 },
   rowDropdown: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15, zIndex: 100 },
-  filterBtn: { flex: 0.45, flexDirection: 'row', padding: 12, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  dropdownContainer: { flex: 0.45 },
+  filterBtn: { flex: 0.48, flexDirection: 'row', padding: 12, borderRadius: 10, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  dropdownContainerFull: { width: '100%' },
   dropdownBtn: { padding: 12, borderRadius: 10, alignItems: 'center', elevation: 2 },
   btnText: { fontWeight: 'bold', fontSize: 14 },
   dropdownList: { position: 'absolute', top: 50, left: 0, right: 0, borderRadius: 10, elevation: 5, zIndex: 999 },
