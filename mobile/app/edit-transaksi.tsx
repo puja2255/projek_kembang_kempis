@@ -123,3 +123,9 @@ const EditTransaksi = () => {
           placeholder="Detail lainnya..."
           placeholderTextColor="#888"
         />
+
+        <Text style={[styles.label, { color: isDark ? '#AAA' : '#666' }]}>Tanggal</Text>
+        <TouchableOpacity 
+          style={[styles.input, styles.dateInput, { backgroundColor: isDark ? '#252525' : '#F9F9F9' }]} 
+          onPress={() => setShowPicker(true)}
+        ></TouchableOpacity>
