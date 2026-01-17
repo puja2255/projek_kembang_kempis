@@ -159,4 +159,5 @@ const EditTransaksi = () => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 16 },
+    card: { padding: 20, borderRadius: 16, elevation: 4, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10 },
 });
