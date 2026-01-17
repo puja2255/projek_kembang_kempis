@@ -8,15 +8,12 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
-  Modal,
-  Platform,
 } from "react-native";
 import { BarChart, LineChart, PieChart } from "react-native-chart-kit";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from "../komponen/ThemeContext";
+import FilterModal from "../komponen/FilterModal"; // Import Komponen Reusable
 import { API_URL } from '../config';
-
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -33,15 +30,13 @@ const Laporan: React.FC = () => {
   const [dataLaporan, setDataLaporan] = useState<LaporanItem[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // State untuk Dropdown Tipe Diagram
   const [chartType, setChartType] = useState<"bar" | "line" | "pie">("bar");
   const [openTipe, setOpenTipe] = useState(false);
   
-  // State untuk Filter Waktu (Gaya Index / Modal)
+  // State untuk Filter (Sinkron dengan Index)
   const [modalVisible, setModalVisible] = useState(false);
   const [modeFilterWaktu, setModeFilterWaktu] = useState<'Semua' | 'Hari' | 'Bulan' | 'Tahun'>('Bulan');
   const [tanggalPilihan, setTanggalPilihan] = useState<Date>(new Date());
-  const [showPicker, setShowPicker] = useState(false);
   
   const [viewFilter, setViewFilter] = useState<'all' | 'in' | 'out'>('all');
 
@@ -64,12 +59,7 @@ const Laporan: React.FC = () => {
     ambilLaporan();
   }, []);
 
-  const handleConfirmDate = (event: any, date?: Date) => {
-    setShowPicker(Platform.OS === 'ios');
-    if (date) setTanggalPilihan(date);
-  };
-
-  // Logika Filter (Sinkron dengan Index)
+  // Logika Filter Data untuk Grafik
   const filteredLaporan = dataLaporan.filter((item) => {
     const tglItem = new Date(item.bulan);
     if (modeFilterWaktu === 'Semua') return true;
@@ -120,18 +110,16 @@ const Laporan: React.FC = () => {
     <ScrollView style={[styles.container, { backgroundColor: isDark ? "#121212" : "#FFFFFF" }]}>
       <Text style={[styles.judul, { color: isDark ? "#FFFFFF" : "#000000" }]}>Laporan Transaksi</Text>
 
-      {/* --- BARIS FILTER (Kalender Modal & Dropdown Diagram) --- */}
+      {/* Baris Kontrol */}
       <View style={styles.rowDropdown}>
-        {/* Tombol Filter Kalender (Gaya Index) */}
         <TouchableOpacity 
           style={[styles.filterBtn, { backgroundColor: isDark ? '#1E1E1E' : '#fff', borderColor: isDark ? '#333' : '#ccc' }]}
           onPress={() => setModalVisible(true)}
         >
           <MaterialCommunityIcons name="tune-vertical" size={20} color="#2d9cdb" />
-          <Text style={{ marginLeft: 8, color: isDark ? '#fff' : '#333', fontWeight: '700' }}>Waktu</Text>
+          <Text style={{ marginLeft: 8, color: isDark ? '#fff' : '#333', fontWeight: '700' }}>Filter</Text>
         </TouchableOpacity>
 
-        {/* Dropdown Tipe Diagram */}
         <View style={styles.dropdownContainer}>
           <TouchableOpacity 
             style={[styles.dropdownBtn, { backgroundColor: isDark ? "#1E1E1E" : "#F0F0F0" }]} 
@@ -153,17 +141,28 @@ const Laporan: React.FC = () => {
         </View>
       </View>
 
-      {/* Info Filter Aktif */}
+      {/* --- PENGGUNAAN FILTER MODAL REUSABLE --- */}
+      <FilterModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        // onFilterJenisChange TIDAK DIKIRIM agar tipe transaksi tersembunyi
+        modeWaktu={modeFilterWaktu}
+        onModeWaktuChange={setModeFilterWaktu}
+        tanggal={tanggalPilihan}
+        onTanggalChange={setTanggalPilihan}
+      />
+
+      {/* Info Periode */}
       <View style={styles.activeFilterLabel}>
           <Text style={{ color: '#2d9cdb', fontSize: 12, fontWeight: '700' }}>
-            Periode: {modeFilterWaktu === 'Semua' ? 'Semua' : 
+            Periode: {modeFilterWaktu === 'Semua' ? 'Semua Data' : 
                       modeFilterWaktu === 'Hari' ? tanggalPilihan.toLocaleDateString('id-ID') : 
                       modeFilterWaktu === 'Bulan' ? tanggalPilihan.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }) : 
                       tanggalPilihan.getFullYear()}
           </Text>
       </View>
 
-      {/* Tab Filter In/Out */}
+      {/* Tab Filter Tampilan */}
       <View style={[styles.summaryCard, { backgroundColor: isDark ? "#1E1E1E" : "#F8F9FA" }]}>
         <TouchableOpacity style={[styles.tabBtn, viewFilter === 'in' && styles.activeTab]} onPress={() => setViewFilter('in')}>
           <Text style={styles.tabLabel}>Masuk</Text>
@@ -178,59 +177,13 @@ const Laporan: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* --- MODAL FILTER KALENDER (IDENTIK INDEX) --- */}
-      <Modal animationType="slide" transparent visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: isDark ? '#1E1E1E' : '#FFF' }]}>
-            <View style={styles.modalHeader}>
-              <Text style={[styles.modalTitle, { color: isDark ? '#FFF' : '#333' }]}>Filter Waktu</Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <MaterialCommunityIcons name="close" size={24} color={isDark ? '#888' : '#666'} />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.modalModeRow}>
-              {(['Semua', 'Hari', 'Bulan', 'Tahun'] as const).map((m) => (
-                <TouchableOpacity key={m} onPress={() => setModeFilterWaktu(m)} style={[styles.modeBtn, modeFilterWaktu === m && styles.modeBtnActive]}>
-                  <Text style={[styles.modeBtnText, modeFilterWaktu === m && { color: '#FFF' }]}>{m}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            {modeFilterWaktu !== 'Semua' && (
-              <TouchableOpacity style={[styles.dateSelector, { backgroundColor: isDark ? '#222' : '#f9f9f9' }]} onPress={() => setShowPicker(true)}>
-                <MaterialCommunityIcons name="calendar" size={20} color="#2d9cdb" />
-                <Text style={{ marginLeft: 10, color: isDark ? '#FFF' : '#333' }}>
-                   {tanggalPilihan.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-                </Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity style={styles.applyBtn} onPress={() => setModalVisible(false)}>
-              <Text style={styles.applyBtnText}>Terapkan Filter</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
-      {showPicker && <DateTimePicker value={tanggalPilihan} mode="date" display="default" onChange={handleConfirmDate} />}
-
-      {/* Area Grafik */}
+      {/* Grafik */}
       {chartType === "pie" ? (
         <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
           <PieChart
             data={[
-              { 
-                name: `In (${formatValueDinamis(totalIn).replace('Rp ', '')})`, 
-                population: totalIn, 
-                color: "#00c853", 
-                legendFontColor: isDark ? "#FFF" : "#000", 
-                legendFontSize: 12 
-              },
-              { 
-                name: `Out (${formatValueDinamis(totalOut).replace('Rp ', '')})`, 
-                population: totalOut, 
-                color: "#e53935", 
-                legendFontColor: isDark ? "#FFF" : "#000", 
-                legendFontSize: 12 
-              }
+              { name: `Masuk`, population: totalIn, color: "#00c853", legendFontColor: isDark ? "#FFF" : "#000" },
+              { name: `Keluar`, population: totalOut, color: "#e53935", legendFontColor: isDark ? "#FFF" : "#000" }
             ]}
             width={screenWidth - 40}
             height={220}
@@ -238,7 +191,6 @@ const Laporan: React.FC = () => {
             accessor="population"
             backgroundColor="transparent"
             paddingLeft="15"
-            absolute // Ini akan tetap menampilkan angka persentase jika diperlukan, tapi label teks kita sudah rapi
           />
         </View>
       ) : (
@@ -291,17 +243,6 @@ const styles = StyleSheet.create({
   tabLabel: { fontSize: 10, color: "#888", fontWeight: '600' },
   tabValue: { fontSize: 13, fontWeight: "bold" },
   activeFilterLabel: { marginBottom: 10, paddingLeft: 5 },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { width: '90%', padding: 20, borderRadius: 20 },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
-  modalTitle: { fontSize: 18, fontWeight: 'bold' },
-  modalModeRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
-  modeBtn: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 8, borderWidth: 1, borderColor: '#ddd' },
-  modeBtnActive: { backgroundColor: '#2d9cdb', borderColor: '#2d9cdb' },
-  modeBtnText: { fontSize: 12, color: '#666', fontWeight: '600' },
-  dateSelector: { flexDirection: 'row', alignItems: 'center', padding: 15, borderRadius: 10, borderWidth: 1, borderColor: '#eee', marginBottom: 20 },
-  applyBtn: { backgroundColor: '#2d9cdb', padding: 15, borderRadius: 12, alignItems: 'center' },
-  applyBtnText: { color: '#fff', fontWeight: 'bold' },
 });
 
 export default Laporan;
