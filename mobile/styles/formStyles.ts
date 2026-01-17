@@ -64,3 +64,9 @@ export const getFormStyles = (isDark: boolean) => StyleSheet.create({
     borderColor: '#27ae60',
     elevation: 3,
   },
+
+  activeTabOut: {
+    backgroundColor: '#e74c3c',
+    borderColor: '#e74c3c',
+    elevation: 3,
+  },
