@@ -40,3 +40,12 @@ export const getFormStyles = (isDark: boolean) => StyleSheet.create({
     textTransform: 'uppercase',
     color: isDark ? '#AAA' : '#666',
   },
+
+  // Toggle Switch / Tab Jenis
+  typeContainer: {
+    flexDirection: 'row',
+    borderRadius: 15,
+    padding: 6,
+    marginBottom: 10,
+    backgroundColor: isDark ? '#252525' : '#E0E4E8',
+  },
