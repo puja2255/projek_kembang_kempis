@@ -100,3 +100,8 @@ export const getFormStyles = (isDark: boolean) => StyleSheet.create({
     fontSize: 16,
     color: isDark ? '#FFF' : '#000',
   },
+
+  inputLarge: {
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
