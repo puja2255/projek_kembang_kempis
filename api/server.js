@@ -47,25 +47,28 @@ app.get('/transaksi', async (req, res) => {
 });
 
 // 3. UPDATE (PUT) Transaksi Berdasarkan ID (UNTUK FITUR EDIT)
-// api/server.js - Bagian PUT saja
 app.put('/transaksi/:id', async (req, res) => {
   const { id } = req.params;
-  const { jenis, jumlah, deskripsi, tanggal } = req.body; // Ambil hanya 4 field ini
-  
+  const { jenis, jumlah, deskripsi, tanggal } = req.body;
+
   try {
     const updateData = await prisma.transaksi.update({
-      where: { id: id }, // Jika ID di DB kamu tipe Integer, gunakan: where: { id: parseInt(id) }
+      where: { 
+        id: id // Karena di schema id adalah String @id
+      },
       data: {
-        jenis,
-        jumlah: parseFloat(jumlah), // Pastikan jadi angka
-        deskripsi,
+        jenis: jenis,
+        jumlah: parseFloat(jumlah),
+        deskripsi: deskripsi,
+        // Pastikan nama field di database 'tanggal' (huruf kecil semua)
         tanggal: tanggal ? new Date(tanggal) : undefined,
       },
     });
+
     res.json(updateData);
   } catch (error) {
-    console.error("Prisma Error:", error);
-    res.status(500).json({ message: 'Gagal memperbarui data di database server.' });
+    console.error("EROR PRISMA:", error);
+    res.status(500).json({ error: 'Gagal update data di database' });
   }
 });
 
