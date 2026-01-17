@@ -216,10 +216,28 @@ const Laporan: React.FC = () => {
         <View style={[styles.chartBox, { backgroundColor: isDark ? "#1E1E1E" : "#FFFFFF" }]}>
           <PieChart
             data={[
-              { name: `In`, population: totalIn, color: "#00c853", legendFontColor: isDark ? "#FFF" : "#000", legendFontSize: 12 },
-              { name: `Out`, population: totalOut, color: "#e53935", legendFontColor: isDark ? "#FFF" : "#000", legendFontSize: 12 }
+              { 
+                name: `In (${formatValueDinamis(totalIn).replace('Rp ', '')})`, 
+                population: totalIn, 
+                color: "#00c853", 
+                legendFontColor: isDark ? "#FFF" : "#000", 
+                legendFontSize: 12 
+              },
+              { 
+                name: `Out (${formatValueDinamis(totalOut).replace('Rp ', '')})`, 
+                population: totalOut, 
+                color: "#e53935", 
+                legendFontColor: isDark ? "#FFF" : "#000", 
+                legendFontSize: 12 
+              }
             ]}
-            width={screenWidth - 40} height={220} chartConfig={baseChartConfig} accessor="population" backgroundColor="transparent" paddingLeft="15" absolute
+            width={screenWidth - 40}
+            height={220}
+            chartConfig={baseChartConfig}
+            accessor="population"
+            backgroundColor="transparent"
+            paddingLeft="15"
+            absolute // Ini akan tetap menampilkan angka persentase jika diperlukan, tapi label teks kita sudah rapi
           />
         </View>
       ) : (
